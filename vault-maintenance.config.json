@@ -1,0 +1,11 @@
+{
+  "vaultPath": "/path/to/your/vault",
+  "excludePatterns": [".obsidian/**", ".claude/**", ".DS_Store"],
+  "reportFolder": "Development/Vault Reports",
+  "indexCheckDepth": 2,
+  "ai": {
+    "enabled": false,
+    "model": "claude-sonnet-4-20250514",
+    "maxSuggestions": 10
+  }
+}
