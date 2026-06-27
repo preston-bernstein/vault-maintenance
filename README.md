@@ -1,6 +1,6 @@
 # vault-maintenance
 
-[![CI](https://github.com/USERNAME/vault-maintenance/actions/workflows/ci.yml/badge.svg)](https://github.com/USERNAME/vault-maintenance/actions/workflows/ci.yml)
+[![CI](https://github.com/preston-bernstein/vault-maintenance/actions/workflows/ci.yml/badge.svg)](https://github.com/preston-bernstein/vault-maintenance/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A CLI that scans your [Obsidian](https://obsidian.md) vault for wiki-link issues and writes a markdown report. Keeps link integrity in check and surfaces broken links, ambiguous targets, and stale index files—optionally with AI-powered fix suggestions.
@@ -23,12 +23,12 @@ Use it locally or on a schedule (e.g. macOS LaunchAgent) to keep vault links and
 ## Install
 
 ```bash
-git clone https://github.com/USERNAME/vault-maintenance.git
+git clone https://github.com/preston-bernstein/vault-maintenance.git
 cd vault-maintenance
 npm install
 ```
 
-(Replace `USERNAME` with the repo owner after you fork or create the repo.)
+(Replace `preston-bernstein` with the repo owner after you fork or create the repo.)
 
 ## Quick start
 
@@ -174,7 +174,7 @@ For more detail (types, conventions), see [CLAUDE.md](CLAUDE.md).
 
 ## Contributing
 
-1. After creating the repo on GitHub, replace `USERNAME` in `package.json` `repository.url` and in this README’s clone/badge URLs with your GitHub username or org.
+1. After creating the repo on GitHub, replace `preston-bernstein` in `package.json` `repository.url` and in this README’s clone/badge URLs with your GitHub username or org.
 2. Install and test: `npm install && npm run test`
 3. Lint and format: `npm run lint && npm run format`
 4. Open an issue or PR. CI runs lint, format check, and tests on push and PRs.
@@ -195,4 +195,4 @@ See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
-**Before first public push:** Replace `USERNAME` in this README (clone URL, badge URLs) and in `package.json` → `repository.url` with your GitHub username or org. Optionally set `"author"` in `package.json`.
+**Before first public push:** Replace `preston-bernstein` in this README (clone URL, badge URLs) and in `package.json` → `repository.url` with your GitHub username or org. Optionally set `"author"` in `package.json`.
