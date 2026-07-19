@@ -3,8 +3,8 @@
  * path helpers (relative, last segment), and date/error formatting.
  */
 
-import { readdir, readFile } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { readdir, readFile } from "node:fs/promises";
+import { join, relative } from "node:path";
 
 /**
  * Recursively list all files in a directory.
@@ -29,10 +29,10 @@ function getGlobRegex(pattern: string): RegExp {
   let re = globCache.get(pattern);
   if (re) return re;
   const regexStr = pattern
-    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-    .replace(/\*\*/g, '{{GLOBSTAR}}')
-    .replace(/\*/g, '[^/]*')
-    .replace(/\{\{GLOBSTAR\}\}/g, '.*');
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*\*/g, "{{GLOBSTAR}}")
+    .replace(/\*/g, "[^/]*")
+    .replace(/\{\{GLOBSTAR\}\}/g, ".*");
   re = new RegExp(`^${regexStr}$`);
   globCache.set(pattern, re);
   return re;
@@ -44,7 +44,7 @@ function getGlobRegex(pattern: string): RegExp {
  */
 export function matchesExclude(
   relativePath: string,
-  patterns: string[]
+  patterns: string[],
 ): boolean {
   for (const pattern of patterns) {
     if (matchGlob(relativePath, pattern)) return true;
@@ -55,45 +55,50 @@ export function matchesExclude(
 function matchGlob(path: string, pattern: string): boolean {
   if (path === pattern) return true;
 
-  if (!pattern.includes('/') && !pattern.includes('*')) {
-    return path === pattern || path.endsWith('/' + pattern);
+  if (!pattern.includes("/") && !pattern.includes("*")) {
+    return path === pattern || path.endsWith("/" + pattern);
   }
 
   return getGlobRegex(pattern).test(path);
 }
 
 export async function readFileContent(path: string): Promise<string> {
-  return readFile(path, 'utf-8');
+  return readFile(path, "utf-8");
 }
 
 /** Read file UTF-8; returns null on any error (permission, ENOENT, etc.). */
-export async function readFileContentSafe(path: string): Promise<string | null> {
+export async function readFileContentSafe(
+  path: string,
+): Promise<string | null> {
   try {
-    return await readFile(path, 'utf-8');
+    return await readFile(path, "utf-8");
   } catch {
     return null;
   }
 }
 
-export function toRelativePath(absolutePath: string, vaultRoot: string): string {
+export function toRelativePath(
+  absolutePath: string,
+  vaultRoot: string,
+): string {
   return relative(vaultRoot, absolutePath);
 }
 
 /** Last path segment (e.g. "Folder/Page One" → "Page One"). */
 export function lastPathSegment(path: string): string {
-  if (typeof path !== 'string') return '';
-  const i = path.lastIndexOf('/');
+  if (typeof path !== "string") return "";
+  const i = path.lastIndexOf("/");
   return i === -1 ? path : path.slice(i + 1);
 }
 
 export function isMarkdownFile(filePath: string): boolean {
-  return filePath.endsWith('.md');
+  return filePath.endsWith(".md");
 }
 
 const MD_EXT_REGEX = /\.md$/;
 
 export function stripMdExtension(path: string): string {
-  return path.replace(MD_EXT_REGEX, '');
+  return path.replace(MD_EXT_REGEX, "");
 }
 
 export function formatError(err: unknown): string {

@@ -3,17 +3,17 @@
  * from every .md file. Reads files in parallel chunks to limit concurrency.
  */
 
-import { basename, extname } from 'node:path';
-import type { ScanResult, VaultFile, WikiLink } from './types.js';
-import { pushToMapList } from './utils/array-helpers.js';
+import { basename, extname } from "node:path";
+import type { ScanResult, VaultFile, WikiLink } from "./types.js";
+import { pushToMapList } from "./utils/array-helpers.js";
 import {
   walkDir,
   matchesExclude,
   readFileContentSafe,
   toRelativePath,
   isMarkdownFile,
-} from './utils/fs-helpers.js';
-import { parseWikiLinks } from './utils/wiki-link-parser.js';
+} from "./utils/fs-helpers.js";
+import { parseWikiLinks } from "./utils/wiki-link-parser.js";
 
 /** Max number of .md files read in parallel when extracting links. */
 const READ_CONCURRENCY = 32;
@@ -62,7 +62,7 @@ export async function scanVault(options: ScanOptions): Promise<ScanResult> {
   for (let i = 0; i < mdFiles.length; i += READ_CONCURRENCY) {
     const chunk = mdFiles.slice(i, i + READ_CONCURRENCY);
     const contents = await Promise.all(
-      chunk.map((f) => readFileContentSafe(f.absolutePath))
+      chunk.map((f) => readFileContentSafe(f.absolutePath)),
     );
     for (let j = 0; j < chunk.length; j++) {
       const content = contents[j];
@@ -82,7 +82,9 @@ export async function scanVault(options: ScanOptions): Promise<ScanResult> {
 
 /** All markdown files from a scan result. Uses precomputed mdFiles when present. */
 export function getMarkdownFiles(scan: ScanResult): VaultFile[] {
-  return scan.mdFiles ?? scan.files.filter((f) => isMarkdownFile(f.relativePath));
+  return (
+    scan.mdFiles ?? scan.files.filter((f) => isMarkdownFile(f.relativePath))
+  );
 }
 
 /** Count of markdown files. O(1) when scan has mdFiles. */

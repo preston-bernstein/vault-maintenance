@@ -28,8 +28,6 @@ cd vault-maintenance
 npm install
 ```
 
-(Replace `preston-bernstein` with the repo owner after you fork or create the repo.)
-
 ## Quick start
 
 Run against a vault (no config file required):
@@ -174,10 +172,9 @@ For more detail (types, conventions), see [CLAUDE.md](CLAUDE.md).
 
 ## Contributing
 
-1. After creating the repo on GitHub, replace `preston-bernstein` in `package.json` `repository.url` and in this README’s clone/badge URLs with your GitHub username or org.
-2. Install and test: `npm install && npm run test`
-3. Lint and format: `npm run lint && npm run format`
-4. Open an issue or PR. CI runs lint, format check, and tests on push and PRs.
+1. Install and test: `npm install && npm run test`
+2. Lint and format: `npm run lint && npm run format`
+3. Open an issue or PR. CI runs lint, format check, build, and tests on push and PRs.
 
 The repo is set up for [Cursor](https://cursor.com) and VS Code (format-on-save, Vitest). Tests use a fixture vault under `tests/fixtures/test-vault/`.
 
@@ -192,7 +189,3 @@ See [CHANGELOG.md](CHANGELOG.md).
 ## License
 
 [MIT](LICENSE)
-
----
-
-**Before first public push:** Replace `preston-bernstein` in this README (clone URL, badge URLs) and in `package.json` → `repository.url` with your GitHub username or org. Optionally set `"author"` in `package.json`.

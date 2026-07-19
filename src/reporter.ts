@@ -3,13 +3,10 @@
  * into one markdown string; writeReport() writes it to the vault with a date-based filename.
  */
 
-import { join } from 'node:path';
-import { mkdir, readdir, writeFile } from 'node:fs/promises';
-import { indexReportHasIssues } from './index-checker.js';
-import {
-  isValidDate,
-  toISODateString,
-} from './utils/fs-helpers.js';
+import { join } from "node:path";
+import { mkdir, readdir, writeFile } from "node:fs/promises";
+import { indexReportHasIssues } from "./index-checker.js";
+import { isValidDate, toISODateString } from "./utils/fs-helpers.js";
 import {
   pushHeaderSection,
   pushBrokenLinksSection,
@@ -17,8 +14,8 @@ import {
   pushAmbiguousLinksSection,
   pushStaleIndexesSection,
   pushSummarySection,
-} from './reporter/sections.js';
-import type { ReportData } from './types.js';
+} from "./reporter/sections.js";
+import type { ReportData } from "./types.js";
 
 /** Build the full markdown report from report data. */
 export function generateReport(data: ReportData): string {
@@ -27,20 +24,14 @@ export function generateReport(data: ReportData): string {
   const dateStr = toISODateString(data.timestamp);
   const reportsWithIssues = data.indexReports.filter(indexReportHasIssues);
 
-  pushHeaderSection(
-    lines,
-    dateStr,
-    ts,
-    data.totalFiles,
-    data.totalLinks
-  );
+  pushHeaderSection(lines, dateStr, ts, data.totalFiles, data.totalLinks);
   pushBrokenLinksSection(lines, data.brokenLinks);
   pushAISuggestionsSection(lines, data);
   pushAmbiguousLinksSection(lines, data.ambiguousLinks);
   pushStaleIndexesSection(lines, data, reportsWithIssues);
   pushSummarySection(lines, data, reportsWithIssues.length);
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -51,7 +42,7 @@ export async function writeReport(
   report: string,
   vaultPath: string,
   reportFolder: string,
-  timestamp: Date
+  timestamp: Date,
 ): Promise<string> {
   const reportDir = join(vaultPath, reportFolder);
   await mkdir(reportDir, { recursive: true });
@@ -61,7 +52,7 @@ export async function writeReport(
 
   const existing = await readdir(reportDir).catch(() => []);
   const sameDayReports = existing.filter(
-    (f) => f.startsWith(dateStr) && f.endsWith('.md')
+    (f) => f.startsWith(dateStr) && f.endsWith(".md"),
   );
 
   if (sameDayReports.length > 0) {
@@ -69,16 +60,16 @@ export async function writeReport(
   }
 
   const filePath = join(reportDir, filename);
-  await writeFile(filePath, report, 'utf-8');
+  await writeFile(filePath, report, "utf-8");
 
   return filePath;
 }
 
 function formatTimestamp(date: Date): string {
   const d = isValidDate(date) ? date : new Date();
-  return d.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
+  return d.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
     hour12: false,
   });
 }
