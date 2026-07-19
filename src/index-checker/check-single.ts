@@ -2,9 +2,9 @@
  * Per-index logic: which files are in scope (by depth) and which links are missing or stale.
  */
 
-import { dirname, relative } from 'node:path';
-import { lastPathSegment } from '../utils/fs-helpers.js';
-import type { IndexReport, VaultFile, WikiLink } from '../types.js';
+import { dirname, relative } from "node:path";
+import { lastPathSegment } from "../utils/fs-helpers.js";
+import type { IndexReport, VaultFile, WikiLink } from "../types.js";
 
 function targetName(link: WikiLink): string {
   return lastPathSegment(link.target);
@@ -17,12 +17,12 @@ function targetName(link: WikiLink): string {
 export function isInScope(
   filePath: string,
   scopeDir: string,
-  depth: number
+  depth: number,
 ): boolean {
-  const rel = scopeDir === '.' ? filePath : relative(scopeDir, filePath);
-  if (rel.startsWith('..')) return false;
+  const rel = scopeDir === "." ? filePath : relative(scopeDir, filePath);
+  if (rel.startsWith("..")) return false;
   let slashCount = 0;
-  for (let i = 0; i < rel.length; i++) if (rel[i] === '/') slashCount++;
+  for (let i = 0; i < rel.length; i++) if (rel[i] === "/") slashCount++;
   return slashCount < depth;
 }
 
@@ -31,7 +31,7 @@ export function checkSingleIndex(
   depth: number,
   mdFiles: VaultFile[],
   allVaultNames: Set<string>,
-  indexLinks: WikiLink[]
+  indexLinks: WikiLink[],
 ): IndexReport {
   const indexDir = dirname(indexFile.relativePath);
 

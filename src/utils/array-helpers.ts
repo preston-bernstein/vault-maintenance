@@ -3,7 +3,7 @@
  */
 export function groupBy<T, K extends string | number | symbol>(
   items: Iterable<T>,
-  keyFn: (item: T) => K
+  keyFn: (item: T) => K,
 ): Map<K, T[]> {
   const map = new Map<K, T[]>();
   for (const item of items) {

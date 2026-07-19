@@ -4,15 +4,15 @@
  * JSON suggestions. No-ops when API key is missing or provider fails.
  */
 
-import { getMarkdownFiles } from './scanner.js';
-import { stripMdExtension, formatError } from './utils/fs-helpers.js';
-import { getApiKey, complete, PROVIDER_ENV } from './ai-providers/index.js';
+import { getMarkdownFiles } from "./scanner.js";
+import { stripMdExtension, formatError } from "./utils/fs-helpers.js";
+import { getApiKey, complete, PROVIDER_ENV } from "./ai-providers/index.js";
 import type {
   AIConfig,
   AISuggestion,
   LinkResolution,
   ScanResult,
-} from './types.js';
+} from "./types.js";
 
 /** Minimum confidence (0–1) to include a suggestion in the report. */
 const MIN_CONFIDENCE = 0.5;
@@ -43,9 +43,9 @@ Respond with valid JSON only. Format:
 If no good match exists for a link, omit it from the array. Only suggest matches with confidence >= ${MIN_CONFIDENCE}.`;
 
 function buildPrompt(brokenList: string, fileList: string): string {
-  return PROMPT_TEMPLATE.replace('{{brokenList}}', brokenList).replace(
-    '{{fileList}}',
-    fileList
+  return PROMPT_TEMPLATE.replace("{{brokenList}}", brokenList).replace(
+    "{{fileList}}",
+    fileList,
   );
 }
 
@@ -57,14 +57,12 @@ function buildPrompt(brokenList: string, fileList: string): string {
 export async function suggestFixes(
   brokenLinks: LinkResolution[],
   scan: ScanResult,
-  config: AIConfig
+  config: AIConfig,
 ): Promise<AISuggestion[]> {
   const apiKey = getApiKey(config.provider);
   const envVar = PROVIDER_ENV[config.provider];
   if (!apiKey) {
-    process.stderr.write(
-      `AI suggestions skipped: ${envVar} not set\n`
-    );
+    process.stderr.write(`AI suggestions skipped: ${envVar} not set\n`);
     return [];
   }
 
@@ -74,14 +72,14 @@ export async function suggestFixes(
     const mdFiles = scan.mdFiles ?? getMarkdownFiles(scan);
     const fileList = mdFiles
       .map((f) => stripMdExtension(f.relativePath))
-      .join('\n');
+      .join("\n");
     const brokenList = brokenLinks
       .slice(0, config.maxSuggestions)
       .map(
         (r) =>
-          `- "${r.link.target}" in file "${r.link.sourceFile}" (line ${r.link.line})`
+          `- "${r.link.target}" in file "${r.link.sourceFile}" (line ${r.link.line})`,
       )
-      .join('\n');
+      .join("\n");
     const prompt = buildPrompt(brokenList, fileList);
 
     const text = await complete(prompt, config);
@@ -103,19 +101,19 @@ interface RawSuggestion {
 function isValidRawSuggestion(value: unknown): value is RawSuggestion {
   return (
     value !== null &&
-    typeof value === 'object' &&
-    typeof (value as RawSuggestion).brokenTarget === 'string' &&
-    typeof (value as RawSuggestion).suggestedTarget === 'string' &&
-    typeof (value as RawSuggestion).confidence === 'number' &&
+    typeof value === "object" &&
+    typeof (value as RawSuggestion).brokenTarget === "string" &&
+    typeof (value as RawSuggestion).suggestedTarget === "string" &&
+    typeof (value as RawSuggestion).confidence === "number" &&
     Number.isFinite((value as RawSuggestion).confidence) &&
-    typeof (value as RawSuggestion).reasoning === 'string'
+    typeof (value as RawSuggestion).reasoning === "string"
   );
 }
 
 /** Exported for unit tests. */
 export function parseSuggestions(
   text: string,
-  brokenLinks: LinkResolution[]
+  brokenLinks: LinkResolution[],
 ): AISuggestion[] {
   try {
     const jsonMatch = text.match(/\[[\s\S]*\]/);
@@ -123,14 +121,12 @@ export function parseSuggestions(
 
     const raw: unknown[] = JSON.parse(jsonMatch[0]);
     if (!Array.isArray(raw)) return [];
-    const brokenMap = new Map(
-      brokenLinks.map((r) => [r.link.target, r.link])
-    );
+    const brokenMap = new Map(brokenLinks.map((r) => [r.link.target, r.link]));
 
     return raw
       .filter(isValidRawSuggestion)
       .filter(
-        (s) => s.confidence >= MIN_CONFIDENCE && brokenMap.has(s.brokenTarget)
+        (s) => s.confidence >= MIN_CONFIDENCE && brokenMap.has(s.brokenTarget),
       )
       .map((s) => ({
         brokenLink: brokenMap.get(s.brokenTarget)!,
