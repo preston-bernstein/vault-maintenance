@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE / OS
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test / coverage
+coverage/
+
+# Optional: keep config local if it has secrets (uncomment if you use a separate local config)
+# vault-maintenance.config.local.json

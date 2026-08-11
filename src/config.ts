@@ -60,6 +60,7 @@ export async function loadConfig(configPath?: string): Promise<Config> {
 function mergeConfig(parsed: unknown): Config {
   if (!isRecord(parsed)) return { ...DEFAULTS };
 
+  const logDir = safeString(parsed.logDir, '');
   return {
     vaultPath: safeString(parsed.vaultPath, DEFAULTS.vaultPath).trim() || DEFAULTS.vaultPath,
     excludePatterns: safeStringArray(parsed.excludePatterns, DEFAULTS.excludePatterns),
@@ -68,6 +69,7 @@ function mergeConfig(parsed: unknown): Config {
       parsed.indexCheckDepth,
       DEFAULTS.indexCheckDepth
     ),
+    logDir: logDir.trim() || undefined,
     ai: mergeAIConfig(parsed.ai),
   };
 }

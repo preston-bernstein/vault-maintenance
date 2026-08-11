@@ -204,4 +204,29 @@ describe('pipeline phase flags', () => {
       }
     });
   });
+
+  describe('log file (--log-dir)', () => {
+    it('writes run log to logDir/YYYY/MM/YYYY-MM-DD.log with header and finish line', async () => {
+      const tmp = await mkdtemp(join(tmpdir(), 'vault-logs-'));
+      try {
+        const code = await runPipeline(
+          defaultOpts({ scanOnly: true, logDir: tmp, verbose: true })
+        );
+        expect(code).toBe(0);
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = now.toISOString().slice(0, 10);
+        const logPath = join(tmp, String(y), m, `${d}.log`);
+        const content = await readFile(logPath, 'utf-8');
+        expect(content).toContain('Run start');
+        expect(content).toContain('vault:');
+        expect(content).toContain('Run finished');
+        expect(content).toContain('exitCode=0');
+        expect(content).toMatch(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/);
+      } finally {
+        await rm(tmp, { recursive: true }).catch(() => {});
+      }
+    });
+  });
 });

@@ -13,6 +13,7 @@ import {
   toRelativePath,
   isMarkdownFile,
 } from './utils/fs-helpers.js';
+import { writeLogLine, isLogging } from './utils/logger.js';
 import { parseWikiLinks } from './utils/wiki-link-parser.js';
 
 /** Max number of .md files read in parallel when extracting links. */
@@ -52,9 +53,8 @@ export async function scanVault(options: ScanOptions): Promise<ScanResult> {
     pushToMapList(filenameIndex, filename, file);
   }
 
-  if (verbose) {
-    process.stderr.write(`Scanned ${files.length} files\n`);
-  }
+  if (verbose) process.stderr.write(`Scanned ${files.length} files\n`);
+  if (isLogging()) void writeLogLine(`Scanned ${files.length} files\n`);
 
   // Parse links from markdown files (parallel reads with concurrency limit)
   const links: WikiLink[] = [];
@@ -73,9 +73,8 @@ export async function scanVault(options: ScanOptions): Promise<ScanResult> {
     }
   }
 
-  if (verbose) {
-    process.stderr.write(`Found ${links.length} links\n`);
-  }
+  if (verbose) process.stderr.write(`Found ${links.length} links\n`);
+  if (isLogging()) void writeLogLine(`Found ${links.length} links\n`);
 
   return { files, links, mdFiles, fileIndex, nameIndex, filenameIndex };
 }

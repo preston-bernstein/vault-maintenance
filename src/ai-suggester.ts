@@ -6,6 +6,7 @@
 
 import { getMarkdownFiles } from './scanner.js';
 import { stripMdExtension, formatError } from './utils/fs-helpers.js';
+import { writeLogLine, isLogging } from './utils/logger.js';
 import { getApiKey, complete, PROVIDER_ENV } from './ai-providers/index.js';
 import type {
   AIConfig,
@@ -62,9 +63,9 @@ export async function suggestFixes(
   const apiKey = getApiKey(config.provider);
   const envVar = PROVIDER_ENV[config.provider];
   if (!apiKey) {
-    process.stderr.write(
-      `AI suggestions skipped: ${envVar} not set\n`
-    );
+    const msg = `AI suggestions skipped: ${envVar} not set\n`;
+    process.stderr.write(msg);
+    if (isLogging()) void writeLogLine(msg);
     return [];
   }
 
@@ -88,7 +89,9 @@ export async function suggestFixes(
     if (text === null) return [];
     return parseSuggestions(text, brokenLinks);
   } catch (err) {
-    process.stderr.write(`AI suggestions failed: ${formatError(err)}\n`);
+    const msg = `AI suggestions failed: ${formatError(err)}\n`;
+    process.stderr.write(msg);
+    if (isLogging()) void writeLogLine(msg);
     return [];
   }
 }

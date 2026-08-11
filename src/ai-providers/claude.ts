@@ -33,9 +33,10 @@ async function loadAnthropicSDK() {
     const mod = await import('@anthropic-ai/sdk');
     return mod.default;
   } catch {
-    process.stderr.write(
-      'AI suggestions skipped: @anthropic-ai/sdk not installed\n'
-    );
+    const msg = 'AI suggestions skipped: @anthropic-ai/sdk not installed\n';
+    process.stderr.write(msg);
+    const { writeLogLine, isLogging } = await import('../utils/logger.js');
+    if (isLogging()) void writeLogLine(msg);
     return null;
   }
 }

@@ -18,6 +18,12 @@ import {
   readReportDataFromFile,
   writeToFile,
 } from './serialization.js';
+import {
+  startLogFile,
+  writeLogLine,
+  endLogFile,
+  isLogging,
+} from './utils/logger.js';
 import type {
   AISuggestion,
   IndexReport,
@@ -42,11 +48,14 @@ export interface PipelineOptions {
   report?: boolean;
   input?: string;
   output?: string;
+  /** When set, append run logs to logDir/YYYY/MM/YYYY-MM-DD.log. Overrides config.logDir. */
+  logDir?: string;
   apply?: boolean;
 }
 
 function log(verbose: boolean, message: string): void {
   if (verbose) process.stderr.write(message);
+  if (isLogging()) void writeLogLine(message);
 }
 
 export async function runPipeline(opts: PipelineOptions): Promise<number> {
@@ -69,6 +78,8 @@ export async function runPipeline(opts: PipelineOptions): Promise<number> {
   config.vaultPath = vaultPath;
 
   const verbose = opts.verbose ?? false;
+  const effectiveLogDir = (opts.logDir ?? config.logDir)?.trim();
+  if (effectiveLogDir) await startLogFile(effectiveLogDir, vaultPath);
 
   const includeScan = Boolean(opts.scanOnly || opts.scan);
   const anyPhaseFlag = Boolean(includeScan || opts.analyze || opts.report);
@@ -136,6 +147,7 @@ export async function runPipeline(opts: PipelineOptions): Promise<number> {
     } else {
       process.stdout.write(out);
     }
+    await endLogFile(0);
     return 0;
   }
 
@@ -147,6 +159,7 @@ export async function runPipeline(opts: PipelineOptions): Promise<number> {
     } else {
       process.stdout.write(out);
     }
+    await endLogFile(0);
     return 0;
   }
 
@@ -168,15 +181,18 @@ export async function runPipeline(opts: PipelineOptions): Promise<number> {
         process.stdout.write(`Report: ${filePath}\n`);
       }
     }
-    return hasReportIssues(
+    const code = hasReportIssues(
       reportData.brokenLinks,
       reportData.ambiguousLinks,
       reportData.indexReports
     )
       ? 1
       : 0;
+    await endLogFile(code);
+    return code;
   }
 
+  await endLogFile(0);
   return 0;
 }
 

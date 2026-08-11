@@ -83,5 +83,7 @@ export interface Config {
   excludePatterns: string[];
   reportFolder: string;
   indexCheckDepth: number;
+  /** If set, append run logs to logDir/YYYY/MM/YYYY-MM-DD.log with timestamps and run headers. */
+  logDir?: string;
   ai: AIConfig;
 }

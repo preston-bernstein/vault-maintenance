@@ -27,6 +27,7 @@ program
   .option('--report', 'Include report phase (generate and write report)')
   .option('--input <file>', 'Path to prior phase output (scan JSON for analyze, analysis JSON for report)')
   .option('--output <file>', 'Write phase output here (when last phase is scan or analyze) instead of stdout')
+  .option('--log-dir <path>', 'Append run logs to path/YYYY/MM/YYYY-MM-DD.log (overrides config)')
   .option('--apply', 'Enact phase: apply changes to vault (not yet implemented)')
   .action(async (opts) => {
     try {
@@ -37,10 +38,16 @@ program
       const pipelineOpts = {
         ...opts,
         scanOnly: Boolean(opts.scanOnly || opts.scan),
+        logDir: opts.logDir,
       };
       const exitCode = await runPipeline(pipelineOpts);
       process.exit(exitCode);
     } catch (err) {
+      const { writeLogLine, endLogFile, isLogging } = await import('./utils/logger.js');
+      if (isLogging()) {
+        void writeLogLine(`Error: ${formatError(err)}`);
+        await endLogFile(2);
+      }
       process.stderr.write(`Error: ${formatError(err)}\n`);
       process.exit(2);
     }
