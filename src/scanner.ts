@@ -3,17 +3,18 @@
  * from every .md file. Reads files in parallel chunks to limit concurrency.
  */
 
-import { basename, extname } from "node:path";
-import type { ScanResult, VaultFile, WikiLink } from "./types.js";
-import { pushToMapList } from "./utils/array-helpers.js";
+import { basename, extname } from 'node:path';
+import type { ScanResult, VaultFile, WikiLink } from './types.js';
+import { pushToMapList } from './utils/array-helpers.js';
 import {
   walkDir,
   matchesExclude,
   readFileContentSafe,
   toRelativePath,
   isMarkdownFile,
-} from "./utils/fs-helpers.js";
-import { parseWikiLinks } from "./utils/wiki-link-parser.js";
+} from './utils/fs-helpers.js';
+import { writeLogLine, isLogging, log } from './utils/logger.js';
+import { parseWikiLinks } from './utils/wiki-link-parser.js';
 
 /** Max number of .md files read in parallel when extracting links. */
 const READ_CONCURRENCY = 32;
@@ -52,9 +53,8 @@ export async function scanVault(options: ScanOptions): Promise<ScanResult> {
     pushToMapList(filenameIndex, filename, file);
   }
 
-  if (verbose) {
-    process.stderr.write(`Scanned ${files.length} files\n`);
-  }
+  if (verbose) process.stderr.write(`Scanned ${files.length} files\n`);
+  if (isLogging()) void writeLogLine(`Scanned ${files.length} files\n`);
 
   // Parse links from markdown files (parallel reads with concurrency limit)
   const links: WikiLink[] = [];
@@ -64,18 +64,21 @@ export async function scanVault(options: ScanOptions): Promise<ScanResult> {
     const contents = await Promise.all(
       chunk.map((f) => readFileContentSafe(f.absolutePath)),
     );
-    for (let j = 0; j < chunk.length; j++) {
-      const content = contents[j];
-      if (content !== null) {
-        const fileLinks = parseWikiLinks(content, chunk[j].relativePath);
-        for (let k = 0; k < fileLinks.length; k++) links.push(fileLinks[k]);
+    for (const [j, content] of contents.entries()) {
+      if (content === null) {
+        await log(
+          verbose ?? false,
+          `Warning: failed to read ${chunk[j].relativePath}, skipping\n`,
+        );
+        continue;
       }
+      const fileLinks = parseWikiLinks(content, chunk[j].relativePath);
+      links.push(...fileLinks);
     }
   }
 
-  if (verbose) {
-    process.stderr.write(`Found ${links.length} links\n`);
-  }
+  if (verbose) process.stderr.write(`Found ${links.length} links\n`);
+  if (isLogging()) void writeLogLine(`Found ${links.length} links\n`);
 
   return { files, links, mdFiles, fileIndex, nameIndex, filenameIndex };
 }

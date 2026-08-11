@@ -3,7 +3,7 @@
  * Skips links inside fenced code blocks. Returns [] if content is not a string.
  */
 
-import type { WikiLink } from "../types.js";
+import type { WikiLink } from '../types.js';
 
 const WIKI_LINK_RE = /(!?)\[\[([^\]]+)\]\]/g;
 const FENCE_RE = /^```/;
@@ -17,9 +17,9 @@ export function parseWikiLinks(
   content: string,
   sourceFile: string,
 ): WikiLink[] {
-  if (typeof content !== "string") return [];
+  if (typeof content !== 'string') return [];
   const links: WikiLink[] = [];
-  const lines = content.split("\n");
+  const lines = content.split('\n');
   let inCodeBlock = false;
 
   for (let i = 0; i < lines.length; i++) {
@@ -37,9 +37,9 @@ export function parseWikiLinks(
     WIKI_LINK_RE.lastIndex = 0;
 
     while ((match = WIKI_LINK_RE.exec(line)) !== null) {
-      const isEmbed = match[1] === "!";
+      const isEmbed = match[1] === '!';
       const inner = match[2];
-      const pipeIndex = inner.indexOf("|");
+      const pipeIndex = inner.indexOf('|');
 
       let target: string;
       let alias: string | null;

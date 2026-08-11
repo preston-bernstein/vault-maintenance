@@ -73,6 +73,7 @@ Create `vault-maintenance.config.json` (or pass `--config <path>`):
   "excludePatterns": [".obsidian/**", ".claude/**", ".DS_Store"],
   "reportFolder": "Development/Vault Reports",
   "indexCheckDepth": 2,
+  "logDir": "/path/to/logs",
   "ai": {
     "enabled": false,
     "provider": "claude",
@@ -88,6 +89,7 @@ Create `vault-maintenance.config.json` (or pass `--config <path>`):
 | `excludePatterns` | Glob-like patterns; matching paths are excluded from the scan |
 | `reportFolder` | Path inside the vault where reports are written (e.g. `YYYY-MM-DD.md`) |
 | `indexCheckDepth` | Folder depth used to decide index/overview scope |
+| `logDir` | Optional. When set, each run appends to `logDir/YYYY/MM/YYYY-MM-DD.log` with timestamps and run start/finish headers. Useful for scheduled runs (e.g. Docker, cron). |
 | `ai` | Optional AI suggestions. `provider`: `"claude"` or `"openai"`. Set `ANTHROPIC_API_KEY` (Claude) or `OPENAI_API_KEY` (OpenAI). `model` defaults to a sensible model per provider. |
 
 Do not commit config files that contain secrets or your real vault path; use a local config (e.g. `vault-maintenance.config.local.json`) or environment variables for API keys.
@@ -109,6 +111,7 @@ Do not commit config files that contain secrets or your real vault path; use a l
 | `--report` | Include the report phase (generate and write report) |
 | `--input <file>` | Path to prior phase output (scan JSON for analyze, analysis JSON for report) |
 | `--output <file>` | **Contextual:** when the **last** phase is scan or analyze, write that phase’s JSON here (otherwise stdout). When the last phase is report, this is ignored; report is written to the vault or printed with `--dry-run`. |
+| `--log-dir <path>` | Append run logs to `path/YYYY/MM/YYYY-MM-DD.log` (timestamps and run headers; overrides config `logDir`) |
 | `--apply` | Enact phase: apply changes to vault (reserved; not yet implemented) |
 
 With **no** phase flags, the full pipeline runs (read → analyze → report). With **one or more** of `--scan-only`/`--scan`, `--analyze`, `--report`, only those phases run in order; **output is the last phase’s result**. Stacking e.g. `--scan --analyze` runs read then analyze in one process and outputs analysis (no report file).
@@ -142,7 +145,7 @@ Without `--input`, `--analyze` runs the scan in memory first; without `--input`,
 
 | Path | Purpose |
 |------|---------|
-| `src/index.ts` | CLI entry (options, exit codes) |
+| `src/cli.ts` | CLI entry (options, exit codes) |
 | `src/run-pipeline.ts` | Pipeline phases: read → analyze → report (optional phase flags, --input/--output) |
 | `src/serialization.ts` | Serialize/deserialize ScanResult and ReportData for phased runs |
 | `src/scanner.ts` | Walk vault, build file/name indexes, parse wiki-links from `.md` |

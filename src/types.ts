@@ -33,7 +33,7 @@ export interface ScanResult {
   filenameIndex: Map<string, VaultFile[]>;
 }
 
-export type LinkStatus = "resolved" | "broken" | "ambiguous";
+export type LinkStatus = 'resolved' | 'broken' | 'ambiguous';
 
 export interface LinkResolution {
   link: WikiLink;
@@ -68,7 +68,7 @@ export interface ReportData {
 }
 
 /** Supported AI providers for link-fix suggestions. */
-export type AIProviderId = "claude" | "openai";
+export type AIProviderId = 'claude' | 'openai';
 
 export interface AIConfig {
   enabled: boolean;
@@ -83,5 +83,7 @@ export interface Config {
   excludePatterns: string[];
   reportFolder: string;
   indexCheckDepth: number;
+  /** If set, append run logs to logDir/YYYY/MM/YYYY-MM-DD.log with timestamps and run headers. */
+  logDir?: string;
   ai: AIConfig;
 }
