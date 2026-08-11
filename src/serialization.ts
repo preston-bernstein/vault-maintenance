@@ -3,8 +3,9 @@
  * ScanResult uses Map; JSON does not preserve Maps, so we use plain objects for the wire format.
  */
 
-import { readFile, writeFile } from "node:fs/promises";
-import type { ReportData, ScanResult, VaultFile, WikiLink } from "./types.js";
+import { readFile, writeFile } from 'node:fs/promises';
+import { isMarkdownFile } from './utils/fs-helpers.js';
+import type { ReportData, ScanResult, VaultFile, WikiLink } from './types.js';
 
 /** JSON-safe shape for ScanResult (Maps as plain objects). */
 export interface ScanResultJSON {
@@ -32,7 +33,9 @@ export function deserializeScanResult(json: string): ScanResult {
   const parsed = JSON.parse(json) as ScanResultJSON;
   return {
     files: parsed.files,
-    mdFiles: parsed.mdFiles,
+    mdFiles:
+      parsed.mdFiles ??
+      parsed.files.filter((f) => isMarkdownFile(f.relativePath)),
     links: parsed.links,
     fileIndex: new Map(Object.entries(parsed.fileIndex ?? {})),
     nameIndex: new Map(
@@ -51,7 +54,7 @@ export function deserializeScanResult(json: string): ScanResult {
 }
 
 /** ReportData with timestamp as ISO string for JSON. */
-interface ReportDataJSON extends Omit<ReportData, "timestamp"> {
+interface ReportDataJSON extends Omit<ReportData, 'timestamp'> {
   timestamp: string;
 }
 
@@ -74,14 +77,14 @@ export function deserializeReportData(json: string): ReportData {
 export async function readScanResultFromFile(
   path: string,
 ): Promise<ScanResult> {
-  const content = await readFile(path, "utf-8");
+  const content = await readFile(path, 'utf-8');
   return deserializeScanResult(content);
 }
 
 export async function readReportDataFromFile(
   path: string,
 ): Promise<ReportData> {
-  const content = await readFile(path, "utf-8");
+  const content = await readFile(path, 'utf-8');
   return deserializeReportData(content);
 }
 
@@ -89,5 +92,5 @@ export async function writeToFile(
   path: string,
   content: string,
 ): Promise<void> {
-  await writeFile(path, content, "utf-8");
+  await writeFile(path, content, 'utf-8');
 }

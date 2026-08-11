@@ -23,8 +23,8 @@ npm run setup:launchd  # Generate macOS LaunchAgent plist for daily 6AM runs
 
 ## Architecture
 
-- **Entry:** `src/index.ts` — CLI only (Commander options, calls `runPipeline`, exits).
-- **Pipeline:** `src/run-pipeline.ts` — Orchestrates runs by phase: load config, then (depending on flags) run read → analyze → report, or a single phase with optional `--input` / `--output`. Not under unit-test coverage (exercised via CLI).
+- **Entry:** `src/cli.ts` — CLI only (Commander options, calls `runPipeline`, exits).
+- **Pipeline:** `src/run-pipeline.ts` — Orchestrates runs by phase: load config, then (depending on flags) run read → analyze → report, or a single phase with optional `--input` / `--output`. Phase selection is a pure, exported `resolvePhases()`; output emission is a separate `emitPhaseOutput()`. Covered by `tests/pipeline-phase.test.ts`.
 
 **Phases (sequential):** read (scan) → analyze (resolve, index check, optional AI) → report (generate and write) → enact (future: apply changes; `--apply` reserved, not implemented).
 
@@ -56,7 +56,7 @@ All in `src/types.ts`: `WikiLink`, `VaultFile`, `ScanResult`, `LinkResolution` (
 
 ## CLI Options
 
-`--vault <path>`, `--config <path>`, `--ai / --no-ai`, `--provider claude|openai`, `--dry-run` (report phase: print to stdout, don’t write file), `--json` (machine-readable), `--verbose` (progress to stderr). Phase flags (stackable): `--scan-only` / `--scan`, `--analyze`, `--report`; `--input <file>` (prior phase output); `--output <file>` (contextual: only when last phase is scan or analyze; ignored when last phase is report); `--apply` (reserved, not implemented). Exit code 1 if any issues found, 0 if clean, 2 on error.
+`--vault <path>`, `--config <path>`, `--ai / --no-ai`, `--provider claude|openai`, `--dry-run` (report phase: print to stdout, don’t write file), `--json` (machine-readable), `--verbose` (progress to stderr). Phase flags (stackable): `--scan-only` / `--scan`, `--analyze`, `--report`; `--input <file>` (prior phase output); `--output <file>` (contextual: only when last phase is scan or analyze; ignored when last phase is report); `--log-dir <path>` (append run logs to path/YYYY/MM/YYYY-MM-DD.log; overrides config `logDir`); `--apply` (reserved, not implemented). Config may include `logDir`. Exit code 1 if any issues found, 0 if clean, 2 on error.
 
 ## Testing
 

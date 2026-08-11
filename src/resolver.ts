@@ -3,8 +3,8 @@
  * and provides helpers to filter by status (broken, ambiguous).
  */
 
-import { resolveLink } from "./resolver/resolve-link.js";
-import type { LinkResolution, ScanResult } from "./types.js";
+import { resolveLink } from './resolver/resolve-link.js';
+import type { LinkResolution, ScanResult } from './types.js';
 
 /**
  * Resolve all wiki-links against the vault file index.
@@ -21,27 +21,6 @@ export function resolveLinks(scan: ScanResult): LinkResolution[] {
   return resolutions;
 }
 
-function getLinksByStatus(
-  resolutions: LinkResolution[],
-  status: LinkResolution["status"],
-): LinkResolution[] {
-  return resolutions.filter((r) => r.status === status);
-}
-
-/** Filter resolutions to only broken links */
-export function getBrokenLinks(
-  resolutions: LinkResolution[],
-): LinkResolution[] {
-  return getLinksByStatus(resolutions, "broken");
-}
-
-/** Filter resolutions to only ambiguous links */
-export function getAmbiguousLinks(
-  resolutions: LinkResolution[],
-): LinkResolution[] {
-  return getLinksByStatus(resolutions, "ambiguous");
-}
-
 /** Single pass: split resolutions into broken and ambiguous. */
 export function getBrokenAndAmbiguousLinks(resolutions: LinkResolution[]): {
   brokenLinks: LinkResolution[];
@@ -50,8 +29,22 @@ export function getBrokenAndAmbiguousLinks(resolutions: LinkResolution[]): {
   const brokenLinks: LinkResolution[] = [];
   const ambiguousLinks: LinkResolution[] = [];
   for (const r of resolutions) {
-    if (r.status === "broken") brokenLinks.push(r);
-    else if (r.status === "ambiguous") ambiguousLinks.push(r);
+    if (r.status === 'broken') brokenLinks.push(r);
+    else if (r.status === 'ambiguous') ambiguousLinks.push(r);
   }
   return { brokenLinks, ambiguousLinks };
+}
+
+/** Filter resolutions to only broken links */
+export function getBrokenLinks(
+  resolutions: LinkResolution[],
+): LinkResolution[] {
+  return getBrokenAndAmbiguousLinks(resolutions).brokenLinks;
+}
+
+/** Filter resolutions to only ambiguous links */
+export function getAmbiguousLinks(
+  resolutions: LinkResolution[],
+): LinkResolution[] {
+  return getBrokenAndAmbiguousLinks(resolutions).ambiguousLinks;
 }

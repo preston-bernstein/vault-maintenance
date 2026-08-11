@@ -1,10 +1,27 @@
-dist/
+# Dependencies
 node_modules/
-coverage/
-*.log
+
+# Build
+dist/
+
+# Environment
 .env
 .env.*
+
+# IDE / OS
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test / coverage
+coverage/
+
+# Local secrets / config overrides
 *.config.local.json
 *.key
 *.pem
-.DS_Store

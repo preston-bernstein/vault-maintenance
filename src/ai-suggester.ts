@@ -4,15 +4,16 @@
  * JSON suggestions. No-ops when API key is missing or provider fails.
  */
 
-import { getMarkdownFiles } from "./scanner.js";
-import { stripMdExtension, formatError } from "./utils/fs-helpers.js";
-import { getApiKey, complete, PROVIDER_ENV } from "./ai-providers/index.js";
+import { stripMdExtension } from './utils/fs-helpers.js';
+import { formatError } from './utils/format.js';
+import { log, isLogging, writeLogLine } from './utils/logger.js';
+import { getApiKey, complete, PROVIDER_ENV } from './ai-providers/index.js';
 import type {
   AIConfig,
   AISuggestion,
   LinkResolution,
   ScanResult,
-} from "./types.js";
+} from './types.js';
 
 /** Minimum confidence (0–1) to include a suggestion in the report. */
 const MIN_CONFIDENCE = 0.5;
@@ -43,8 +44,8 @@ Respond with valid JSON only. Format:
 If no good match exists for a link, omit it from the array. Only suggest matches with confidence >= ${MIN_CONFIDENCE}.`;
 
 function buildPrompt(brokenList: string, fileList: string): string {
-  return PROMPT_TEMPLATE.replace("{{brokenList}}", brokenList).replace(
-    "{{fileList}}",
+  return PROMPT_TEMPLATE.replace('{{brokenList}}', brokenList).replace(
+    '{{fileList}}',
     fileList,
   );
 }
@@ -58,35 +59,40 @@ export async function suggestFixes(
   brokenLinks: LinkResolution[],
   scan: ScanResult,
   config: AIConfig,
+  verbose = false,
 ): Promise<AISuggestion[]> {
   const apiKey = getApiKey(config.provider);
   const envVar = PROVIDER_ENV[config.provider];
   if (!apiKey) {
-    process.stderr.write(`AI suggestions skipped: ${envVar} not set\n`);
+    const msg = `AI suggestions skipped: ${envVar} not set\n`;
+    process.stderr.write(msg);
+    if (isLogging()) await writeLogLine(msg);
     return [];
   }
 
   if (brokenLinks.length === 0) return [];
 
   try {
-    const mdFiles = scan.mdFiles ?? getMarkdownFiles(scan);
+    const mdFiles = scan.mdFiles;
     const fileList = mdFiles
       .map((f) => stripMdExtension(f.relativePath))
-      .join("\n");
+      .join('\n');
     const brokenList = brokenLinks
       .slice(0, config.maxSuggestions)
       .map(
         (r) =>
           `- "${r.link.target}" in file "${r.link.sourceFile}" (line ${r.link.line})`,
       )
-      .join("\n");
+      .join('\n');
     const prompt = buildPrompt(brokenList, fileList);
 
-    const text = await complete(prompt, config);
+    const text = await complete(prompt, config, verbose);
     if (text === null) return [];
-    return parseSuggestions(text, brokenLinks);
+    return parseSuggestions(text, brokenLinks, verbose);
   } catch (err) {
-    process.stderr.write(`AI suggestions failed: ${formatError(err)}\n`);
+    const msg = `AI suggestions failed: ${formatError(err)}\n`;
+    process.stderr.write(msg);
+    if (isLogging()) await writeLogLine(msg);
     return [];
   }
 }
@@ -101,12 +107,12 @@ interface RawSuggestion {
 function isValidRawSuggestion(value: unknown): value is RawSuggestion {
   return (
     value !== null &&
-    typeof value === "object" &&
-    typeof (value as RawSuggestion).brokenTarget === "string" &&
-    typeof (value as RawSuggestion).suggestedTarget === "string" &&
-    typeof (value as RawSuggestion).confidence === "number" &&
+    typeof value === 'object' &&
+    typeof (value as RawSuggestion).brokenTarget === 'string' &&
+    typeof (value as RawSuggestion).suggestedTarget === 'string' &&
+    typeof (value as RawSuggestion).confidence === 'number' &&
     Number.isFinite((value as RawSuggestion).confidence) &&
-    typeof (value as RawSuggestion).reasoning === "string"
+    typeof (value as RawSuggestion).reasoning === 'string'
   );
 }
 
@@ -114,6 +120,7 @@ function isValidRawSuggestion(value: unknown): value is RawSuggestion {
 export function parseSuggestions(
   text: string,
   brokenLinks: LinkResolution[],
+  verbose = false,
 ): AISuggestion[] {
   try {
     const jsonMatch = text.match(/\[[\s\S]*\]/);
@@ -134,7 +141,11 @@ export function parseSuggestions(
         confidence: s.confidence,
         reasoning: s.reasoning,
       }));
-  } catch {
+  } catch (err) {
+    void log(
+      verbose,
+      `AI suggestions failed: could not parse AI response as JSON: ${formatError(err)}\n`,
+    );
     return [];
   }
 }

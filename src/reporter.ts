@@ -3,10 +3,10 @@
  * into one markdown string; writeReport() writes it to the vault with a date-based filename.
  */
 
-import { join } from "node:path";
-import { mkdir, readdir, writeFile } from "node:fs/promises";
-import { indexReportHasIssues } from "./index-checker.js";
-import { isValidDate, toISODateString } from "./utils/fs-helpers.js";
+import { join } from 'node:path';
+import { mkdir, readdir, writeFile } from 'node:fs/promises';
+import { indexReportHasIssues } from './index-checker.js';
+import { formatError, isValidDate, toISODateString } from './utils/format.js';
 import {
   pushHeaderSection,
   pushBrokenLinksSection,
@@ -14,8 +14,8 @@ import {
   pushAmbiguousLinksSection,
   pushStaleIndexesSection,
   pushSummarySection,
-} from "./reporter/sections.js";
-import type { ReportData } from "./types.js";
+} from './reporter/sections.js';
+import type { ReportData } from './types.js';
 
 /** Build the full markdown report from report data. */
 export function generateReport(data: ReportData): string {
@@ -25,13 +25,19 @@ export function generateReport(data: ReportData): string {
   const reportsWithIssues = data.indexReports.filter(indexReportHasIssues);
 
   pushHeaderSection(lines, dateStr, ts, data.totalFiles, data.totalLinks);
+  lines.push('---');
   pushBrokenLinksSection(lines, data.brokenLinks);
-  pushAISuggestionsSection(lines, data);
+  pushAISuggestionsSection(lines, data.aiSuggestions);
+  lines.push('');
+  lines.push('---');
   pushAmbiguousLinksSection(lines, data.ambiguousLinks);
-  pushStaleIndexesSection(lines, data, reportsWithIssues);
+  lines.push('');
+  lines.push('---');
+  pushStaleIndexesSection(lines, reportsWithIssues);
+  lines.push('---');
   pushSummarySection(lines, data, reportsWithIssues.length);
 
-  return lines.join("\n");
+  return lines.join('\n');
 }
 
 /**
@@ -50,9 +56,14 @@ export async function writeReport(
   const dateStr = toISODateString(timestamp);
   let filename = `${dateStr}.md`;
 
-  const existing = await readdir(reportDir).catch(() => []);
+  const existing = await readdir(reportDir).catch((err) => {
+    process.stderr.write(
+      `Failed to read report directory: ${formatError(err)}\n`,
+    );
+    return [];
+  });
   const sameDayReports = existing.filter(
-    (f) => f.startsWith(dateStr) && f.endsWith(".md"),
+    (f) => f.startsWith(dateStr) && f.endsWith('.md'),
   );
 
   if (sameDayReports.length > 0) {
@@ -60,16 +71,16 @@ export async function writeReport(
   }
 
   const filePath = join(reportDir, filename);
-  await writeFile(filePath, report, "utf-8");
+  await writeFile(filePath, report, 'utf-8');
 
   return filePath;
 }
 
 function formatTimestamp(date: Date): string {
   const d = isValidDate(date) ? date : new Date();
-  return d.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
+  return d.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
     hour12: false,
   });
 }
