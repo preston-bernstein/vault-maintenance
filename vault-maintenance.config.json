@@ -1,7 +1,7 @@
 {
   "vaultPath": "/path/to/your/vault",
   "excludePatterns": [".obsidian/**", ".claude/**", ".DS_Store"],
-  "reportFolder": "Development/Vault Reports",
+  "reportFolder": "Vault Reports",
   "indexCheckDepth": 2,
   "ai": {
     "enabled": false,

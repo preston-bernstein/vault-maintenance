@@ -6,8 +6,7 @@ dist/
 
 # Environment
 .env
-.env.local
-.env.*.local
+.env.*
 
 # IDE / OS
 .idea/
@@ -22,5 +21,7 @@ npm-debug.log*
 # Test / coverage
 coverage/
 
-# Optional: keep config local if it has secrets (uncomment if you use a separate local config)
-# vault-maintenance.config.local.json
+# Local secrets / config overrides
+*.config.local.json
+*.key
+*.pem
