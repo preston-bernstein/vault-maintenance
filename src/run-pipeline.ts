@@ -199,9 +199,15 @@ export async function runPipeline(opts: PipelineOptions): Promise<number> {
     if (runRead) {
       await log(verbose, `Vault: ${config.vaultPath}\n`);
       await log(verbose, 'Scanning vault...\n');
+      const reportFolderPattern = `${config.reportFolder}/**`;
+      const excludePatterns = config.excludePatterns.includes(
+        reportFolderPattern,
+      )
+        ? config.excludePatterns
+        : [...config.excludePatterns, reportFolderPattern];
       scan = await scanVault({
         vaultPath,
-        excludePatterns: config.excludePatterns,
+        excludePatterns,
         verbose,
       });
     } else if (runAnalyze && opts.input) {

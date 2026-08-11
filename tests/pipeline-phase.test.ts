@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { runPipeline } from '../src/run-pipeline.js';
 import {
@@ -211,6 +211,40 @@ describe('pipeline phase flags', () => {
         expect(content).toContain('Run finished');
         expect(content).toContain('exitCode=0');
         expect(content).toMatch(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/);
+      } finally {
+        await rm(tmp, { recursive: true }).catch(() => {});
+      }
+    });
+  });
+
+  describe('report folder self-exclusion', () => {
+    it('never scans its own reportFolder, even if excludePatterns omits it', async () => {
+      const tmp = await mkdtemp(join(tmpdir(), 'vault-report-exclude-'));
+      const reportDir = join(tmp, 'Development', 'Vault Reports');
+      const outputPath = join(tmp, 'scan-out.json');
+      try {
+        await mkdir(reportDir, { recursive: true });
+        // A prior report full of [[wiki-link]]-shaped table cells, which
+        // would otherwise be miscounted as real vault links on the next scan.
+        await writeFile(
+          join(reportDir, '2026-01-01.md'),
+          '| [[Some Page]] | `[[Broken Target]]` | 1 |\n',
+        );
+        await writeFile(join(tmp, 'Real Note.md'), 'A real note.');
+
+        const code = await runPipeline(
+          defaultOpts({ vault: tmp, scanOnly: true, output: outputPath }),
+        );
+        expect(code).toBe(0);
+        const raw = await readFile(outputPath, 'utf-8');
+        const scan = deserializeScanResult(raw);
+        expect(
+          scan.mdFiles.some((f) => f.relativePath.includes('Vault Reports')),
+        ).toBe(false);
+        expect(
+          scan.mdFiles.some((f) => f.relativePath === 'Real Note.md'),
+        ).toBe(true);
+        expect(scan.links.length).toBe(0);
       } finally {
         await rm(tmp, { recursive: true }).catch(() => {});
       }
