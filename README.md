@@ -145,7 +145,7 @@ Without `--input`, `--analyze` runs the scan in memory first; without `--input`,
 
 | Path | Purpose |
 |------|---------|
-| `src/index.ts` | CLI entry (options, exit codes) |
+| `src/cli.ts` | CLI entry (options, exit codes) |
 | `src/run-pipeline.ts` | Pipeline phases: read → analyze → report (optional phase flags, --input/--output) |
 | `src/serialization.ts` | Serialize/deserialize ScanResult and ReportData for phased runs |
 | `src/scanner.ts` | Walk vault, build file/name indexes, parse wiki-links from `.md` |

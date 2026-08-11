@@ -1,6 +1,7 @@
 /**
  * File system helpers: directory walk, glob-style exclude matching, safe read,
- * path helpers (relative, last segment), and date/error formatting.
+ * and path helpers (relative, last segment). Error/date formatting lives in
+ * ./format.js, since those aren't filesystem-specific.
  */
 
 import { readdir, readFile } from 'node:fs/promises';
@@ -95,19 +96,4 @@ const MD_EXT_REGEX = /\.md$/;
 
 export function stripMdExtension(path: string): string {
   return path.replace(MD_EXT_REGEX, '');
-}
-
-export function formatError(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
-}
-
-/** True if value is a valid Date (not invalid, not NaN). */
-export function isValidDate(value: unknown): value is Date {
-  return value instanceof Date && Number.isFinite(value.getTime());
-}
-
-/** YYYY-MM-DD for a Date; fallback to today if invalid. */
-export function toISODateString(date: unknown): string {
-  const d = isValidDate(date) ? date : new Date();
-  return d.toISOString().slice(0, 10);
 }

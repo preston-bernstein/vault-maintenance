@@ -24,7 +24,7 @@ const plist = `<?xml version="1.0" encoding="UTF-8"?>
     <array>
         <string>${npxPath}</string>
         <string>tsx</string>
-        <string>${join(PROJECT_DIR, 'src', 'index.ts')}</string>
+        <string>${join(PROJECT_DIR, 'src', 'cli.ts')}</string>
         <string>--verbose</string>
         <string>--log-dir</string>
         <string>${logDir}</string>

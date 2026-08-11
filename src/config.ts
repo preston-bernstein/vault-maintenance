@@ -5,7 +5,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { Config, AIProviderId } from './types.js';
-import { formatError } from './utils/fs-helpers.js';
+import { formatError } from './utils/format.js';
 
 const VALID_PROVIDERS = new Set<string>(['claude', 'openai']);
 

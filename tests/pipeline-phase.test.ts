@@ -50,7 +50,7 @@ describe('pipeline phase flags', () => {
       }
     });
 
-    // The --scan/--scan-only alias is normalized to `scanOnly` in index.ts's CLI
+    // The --scan/--scan-only alias is normalized to `scanOnly` in cli.ts's CLI
     // parsing layer; runPipeline itself only understands `scanOnly` (see
     // PipelineOptions), so there is nothing distinct to unit-test here beyond
     // the scanOnly case above.

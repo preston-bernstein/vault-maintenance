@@ -6,11 +6,7 @@
 import { join } from 'node:path';
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { indexReportHasIssues } from './index-checker.js';
-import {
-  formatError,
-  isValidDate,
-  toISODateString,
-} from './utils/fs-helpers.js';
+import { formatError, isValidDate, toISODateString } from './utils/format.js';
 import {
   pushHeaderSection,
   pushBrokenLinksSection,

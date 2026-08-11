@@ -3,7 +3,7 @@
  */
 
 import type { AIConfig } from '../types.js';
-import { formatError } from '../utils/fs-helpers.js';
+import { formatError } from '../utils/format.js';
 import { log } from '../utils/logger.js';
 
 export async function completeClaude(

@@ -25,7 +25,7 @@ import {
   writeLogLine,
   log,
 } from './utils/logger.js';
-import { formatError } from './utils/fs-helpers.js';
+import { formatError } from './utils/format.js';
 import type {
   AISuggestion,
   IndexReport,

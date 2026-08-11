@@ -21,27 +21,6 @@ export function resolveLinks(scan: ScanResult): LinkResolution[] {
   return resolutions;
 }
 
-function getLinksByStatus(
-  resolutions: LinkResolution[],
-  status: LinkResolution['status'],
-): LinkResolution[] {
-  return resolutions.filter((r) => r.status === status);
-}
-
-/** Filter resolutions to only broken links */
-export function getBrokenLinks(
-  resolutions: LinkResolution[],
-): LinkResolution[] {
-  return getLinksByStatus(resolutions, 'broken');
-}
-
-/** Filter resolutions to only ambiguous links */
-export function getAmbiguousLinks(
-  resolutions: LinkResolution[],
-): LinkResolution[] {
-  return getLinksByStatus(resolutions, 'ambiguous');
-}
-
 /** Single pass: split resolutions into broken and ambiguous. */
 export function getBrokenAndAmbiguousLinks(resolutions: LinkResolution[]): {
   brokenLinks: LinkResolution[];
@@ -54,4 +33,18 @@ export function getBrokenAndAmbiguousLinks(resolutions: LinkResolution[]): {
     else if (r.status === 'ambiguous') ambiguousLinks.push(r);
   }
   return { brokenLinks, ambiguousLinks };
+}
+
+/** Filter resolutions to only broken links */
+export function getBrokenLinks(
+  resolutions: LinkResolution[],
+): LinkResolution[] {
+  return getBrokenAndAmbiguousLinks(resolutions).brokenLinks;
+}
+
+/** Filter resolutions to only ambiguous links */
+export function getAmbiguousLinks(
+  resolutions: LinkResolution[],
+): LinkResolution[] {
+  return getBrokenAndAmbiguousLinks(resolutions).ambiguousLinks;
 }

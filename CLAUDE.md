@@ -23,7 +23,7 @@ npm run setup:launchd  # Generate macOS LaunchAgent plist for daily 6AM runs
 
 ## Architecture
 
-- **Entry:** `src/index.ts` — CLI only (Commander options, calls `runPipeline`, exits).
+- **Entry:** `src/cli.ts` — CLI only (Commander options, calls `runPipeline`, exits).
 - **Pipeline:** `src/run-pipeline.ts` — Orchestrates runs by phase: load config, then (depending on flags) run read → analyze → report, or a single phase with optional `--input` / `--output`. Phase selection is a pure, exported `resolvePhases()`; output emission is a separate `emitPhaseOutput()`. Covered by `tests/pipeline-phase.test.ts`.
 
 **Phases (sequential):** read (scan) → analyze (resolve, index check, optional AI) → report (generate and write) → enact (future: apply changes; `--apply` reserved, not implemented).

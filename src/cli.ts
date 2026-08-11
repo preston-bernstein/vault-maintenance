@@ -6,7 +6,7 @@
 
 import { Command } from 'commander';
 import { runPipeline } from './run-pipeline.js';
-import { formatError } from './utils/fs-helpers.js';
+import { formatError } from './utils/format.js';
 import { writeLogLine, endLogFile, isLogging } from './utils/logger.js';
 
 const program = new Command();
