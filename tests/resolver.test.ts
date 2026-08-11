@@ -16,7 +16,7 @@ describe('resolveLinks', () => {
     const pageTwoRes = resolutions.find(
       (r) =>
         r.link.target === 'Page Two' &&
-        r.link.sourceFile === 'FolderA/Page One.md'
+        r.link.sourceFile === 'FolderA/Page One.md',
     );
     expect(pageTwoRes).toBeDefined();
     expect(pageTwoRes!.status).toBe('resolved');
@@ -31,7 +31,7 @@ describe('resolveLinks', () => {
     const pathed = resolutions.find(
       (r) =>
         r.link.target === 'FolderA/Page One' &&
-        r.link.sourceFile === 'Root Note.md'
+        r.link.sourceFile === 'Root Note.md',
     );
     expect(pathed).toBeDefined();
     expect(pathed!.status).toBe('resolved');
@@ -45,7 +45,7 @@ describe('resolveLinks', () => {
 
     // [[Nonexistent Page]] from Root Note.md should be broken
     const nonexistent = broken.find(
-      (r) => r.link.target === 'Nonexistent Page'
+      (r) => r.link.target === 'Nonexistent Page',
     );
     expect(nonexistent).toBeDefined();
     expect(nonexistent!.status).toBe('broken');
@@ -71,7 +71,9 @@ describe('resolveLinks', () => {
     const resolutions = resolveLinks(scan);
 
     const assetRes = resolutions.find(
-      (r) => r.link.target === 'asset.png' && r.link.sourceFile === 'FolderC/Index.md'
+      (r) =>
+        r.link.target === 'asset.png' &&
+        r.link.sourceFile === 'FolderC/Index.md',
     );
     expect(assetRes).toBeDefined();
     expect(assetRes!.status).toBe('resolved');
@@ -89,7 +91,7 @@ describe('getBrokenAndAmbiguousLinks', () => {
     expect(brokenLinks.every((r) => r.status === 'broken')).toBe(true);
     expect(ambiguousLinks.every((r) => r.status === 'ambiguous')).toBe(true);
     expect(brokenLinks.length + ambiguousLinks.length).toBeLessThanOrEqual(
-      resolutions.length
+      resolutions.length,
     );
   });
 });

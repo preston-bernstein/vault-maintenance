@@ -4,9 +4,8 @@
  * JSON suggestions. No-ops when API key is missing or provider fails.
  */
 
-import { getMarkdownFiles } from './scanner.js';
 import { stripMdExtension, formatError } from './utils/fs-helpers.js';
-import { writeLogLine, isLogging } from './utils/logger.js';
+import { log, isLogging, writeLogLine } from './utils/logger.js';
 import { getApiKey, complete, PROVIDER_ENV } from './ai-providers/index.js';
 import type {
   AIConfig,
@@ -46,7 +45,7 @@ If no good match exists for a link, omit it from the array. Only suggest matches
 function buildPrompt(brokenList: string, fileList: string): string {
   return PROMPT_TEMPLATE.replace('{{brokenList}}', brokenList).replace(
     '{{fileList}}',
-    fileList
+    fileList,
   );
 }
 
@@ -58,21 +57,22 @@ function buildPrompt(brokenList: string, fileList: string): string {
 export async function suggestFixes(
   brokenLinks: LinkResolution[],
   scan: ScanResult,
-  config: AIConfig
+  config: AIConfig,
+  verbose = false,
 ): Promise<AISuggestion[]> {
   const apiKey = getApiKey(config.provider);
   const envVar = PROVIDER_ENV[config.provider];
   if (!apiKey) {
     const msg = `AI suggestions skipped: ${envVar} not set\n`;
     process.stderr.write(msg);
-    if (isLogging()) void writeLogLine(msg);
+    if (isLogging()) await writeLogLine(msg);
     return [];
   }
 
   if (brokenLinks.length === 0) return [];
 
   try {
-    const mdFiles = scan.mdFiles ?? getMarkdownFiles(scan);
+    const mdFiles = scan.mdFiles;
     const fileList = mdFiles
       .map((f) => stripMdExtension(f.relativePath))
       .join('\n');
@@ -80,18 +80,18 @@ export async function suggestFixes(
       .slice(0, config.maxSuggestions)
       .map(
         (r) =>
-          `- "${r.link.target}" in file "${r.link.sourceFile}" (line ${r.link.line})`
+          `- "${r.link.target}" in file "${r.link.sourceFile}" (line ${r.link.line})`,
       )
       .join('\n');
     const prompt = buildPrompt(brokenList, fileList);
 
-    const text = await complete(prompt, config);
+    const text = await complete(prompt, config, verbose);
     if (text === null) return [];
-    return parseSuggestions(text, brokenLinks);
+    return parseSuggestions(text, brokenLinks, verbose);
   } catch (err) {
     const msg = `AI suggestions failed: ${formatError(err)}\n`;
     process.stderr.write(msg);
-    if (isLogging()) void writeLogLine(msg);
+    if (isLogging()) await writeLogLine(msg);
     return [];
   }
 }
@@ -118,7 +118,8 @@ function isValidRawSuggestion(value: unknown): value is RawSuggestion {
 /** Exported for unit tests. */
 export function parseSuggestions(
   text: string,
-  brokenLinks: LinkResolution[]
+  brokenLinks: LinkResolution[],
+  verbose = false,
 ): AISuggestion[] {
   try {
     const jsonMatch = text.match(/\[[\s\S]*\]/);
@@ -126,14 +127,12 @@ export function parseSuggestions(
 
     const raw: unknown[] = JSON.parse(jsonMatch[0]);
     if (!Array.isArray(raw)) return [];
-    const brokenMap = new Map(
-      brokenLinks.map((r) => [r.link.target, r.link])
-    );
+    const brokenMap = new Map(brokenLinks.map((r) => [r.link.target, r.link]));
 
     return raw
       .filter(isValidRawSuggestion)
       .filter(
-        (s) => s.confidence >= MIN_CONFIDENCE && brokenMap.has(s.brokenTarget)
+        (s) => s.confidence >= MIN_CONFIDENCE && brokenMap.has(s.brokenTarget),
       )
       .map((s) => ({
         brokenLink: brokenMap.get(s.brokenTarget)!,
@@ -141,7 +140,11 @@ export function parseSuggestions(
         confidence: s.confidence,
         reasoning: s.reasoning,
       }));
-  } catch {
+  } catch (err) {
+    void log(
+      verbose,
+      `AI suggestions failed: could not parse AI response as JSON: ${formatError(err)}\n`,
+    );
     return [];
   }
 }

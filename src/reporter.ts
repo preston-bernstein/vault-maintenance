@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { indexReportHasIssues } from './index-checker.js';
 import {
+  formatError,
   isValidDate,
   toISODateString,
 } from './utils/fs-helpers.js';
@@ -27,17 +28,17 @@ export function generateReport(data: ReportData): string {
   const dateStr = toISODateString(data.timestamp);
   const reportsWithIssues = data.indexReports.filter(indexReportHasIssues);
 
-  pushHeaderSection(
-    lines,
-    dateStr,
-    ts,
-    data.totalFiles,
-    data.totalLinks
-  );
+  pushHeaderSection(lines, dateStr, ts, data.totalFiles, data.totalLinks);
+  lines.push('---');
   pushBrokenLinksSection(lines, data.brokenLinks);
-  pushAISuggestionsSection(lines, data);
+  pushAISuggestionsSection(lines, data.aiSuggestions);
+  lines.push('');
+  lines.push('---');
   pushAmbiguousLinksSection(lines, data.ambiguousLinks);
-  pushStaleIndexesSection(lines, data, reportsWithIssues);
+  lines.push('');
+  lines.push('---');
+  pushStaleIndexesSection(lines, reportsWithIssues);
+  lines.push('---');
   pushSummarySection(lines, data, reportsWithIssues.length);
 
   return lines.join('\n');
@@ -51,7 +52,7 @@ export async function writeReport(
   report: string,
   vaultPath: string,
   reportFolder: string,
-  timestamp: Date
+  timestamp: Date,
 ): Promise<string> {
   const reportDir = join(vaultPath, reportFolder);
   await mkdir(reportDir, { recursive: true });
@@ -59,9 +60,14 @@ export async function writeReport(
   const dateStr = toISODateString(timestamp);
   let filename = `${dateStr}.md`;
 
-  const existing = await readdir(reportDir).catch(() => []);
+  const existing = await readdir(reportDir).catch((err) => {
+    process.stderr.write(
+      `Failed to read report directory: ${formatError(err)}\n`,
+    );
+    return [];
+  });
   const sameDayReports = existing.filter(
-    (f) => f.startsWith(dateStr) && f.endsWith('.md')
+    (f) => f.startsWith(dateStr) && f.endsWith('.md'),
   );
 
   if (sameDayReports.length > 0) {

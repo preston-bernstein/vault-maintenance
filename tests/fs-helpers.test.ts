@@ -17,11 +17,15 @@ import { tmpdir } from 'node:os';
 
 describe('matchesExclude', () => {
   it('matches exact path', () => {
-    expect(matchesExclude('.obsidian/config.json', ['.obsidian/config.json'])).toBe(true);
+    expect(
+      matchesExclude('.obsidian/config.json', ['.obsidian/config.json']),
+    ).toBe(true);
   });
 
   it('matches glob ** pattern', () => {
-    expect(matchesExclude('.obsidian/plugins/foo.js', ['.obsidian/**'])).toBe(true);
+    expect(matchesExclude('.obsidian/plugins/foo.js', ['.obsidian/**'])).toBe(
+      true,
+    );
   });
 
   it('matches glob * segment', () => {
@@ -40,14 +44,18 @@ describe('matchesExclude', () => {
 
 describe('readFileContentSafe', () => {
   it('returns null when file does not exist', async () => {
-    const result = await readFileContentSafe(join(tmpdir(), 'nonexistent-file-xyz.txt'));
+    const result = await readFileContentSafe(
+      join(tmpdir(), 'nonexistent-file-xyz.txt'),
+    );
     expect(result).toBeNull();
   });
 });
 
 describe('toRelativePath', () => {
   it('returns path relative to root', () => {
-    expect(toRelativePath('/vault/Notes/Page.md', '/vault')).toBe('Notes/Page.md');
+    expect(toRelativePath('/vault/Notes/Page.md', '/vault')).toBe(
+      'Notes/Page.md',
+    );
   });
 });
 
@@ -100,7 +108,9 @@ describe('isValidDate', () => {
 
 describe('toISODateString', () => {
   it('returns YYYY-MM-DD for valid date', () => {
-    expect(toISODateString(new Date('2026-02-08T12:00:00Z'))).toBe('2026-02-08');
+    expect(toISODateString(new Date('2026-02-08T12:00:00Z'))).toBe(
+      '2026-02-08',
+    );
   });
   it('falls back to today for invalid date', () => {
     const result = toISODateString(new Date('invalid'));

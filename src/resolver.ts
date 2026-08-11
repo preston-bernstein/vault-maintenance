@@ -23,19 +23,21 @@ export function resolveLinks(scan: ScanResult): LinkResolution[] {
 
 function getLinksByStatus(
   resolutions: LinkResolution[],
-  status: LinkResolution['status']
+  status: LinkResolution['status'],
 ): LinkResolution[] {
   return resolutions.filter((r) => r.status === status);
 }
 
 /** Filter resolutions to only broken links */
-export function getBrokenLinks(resolutions: LinkResolution[]): LinkResolution[] {
+export function getBrokenLinks(
+  resolutions: LinkResolution[],
+): LinkResolution[] {
   return getLinksByStatus(resolutions, 'broken');
 }
 
 /** Filter resolutions to only ambiguous links */
 export function getAmbiguousLinks(
-  resolutions: LinkResolution[]
+  resolutions: LinkResolution[],
 ): LinkResolution[] {
   return getLinksByStatus(resolutions, 'ambiguous');
 }

@@ -45,7 +45,7 @@ describe('generateReport', () => {
             candidates: [],
           },
         ],
-      })
+      }),
     );
 
     expect(report).toContain('## 🔗 Broken links (1)');
@@ -92,7 +92,7 @@ describe('generateReport', () => {
             reasoning: 'Similar device name',
           },
         ],
-      })
+      }),
     );
 
     expect(report).toContain('### 🧠 AI suggestions');
@@ -137,7 +137,7 @@ describe('generateReport', () => {
             ],
           },
         ],
-      })
+      }),
     );
 
     expect(report).toContain('## 📘 Stale indexes (1)');
@@ -156,7 +156,7 @@ describe('generateReport', () => {
 
   it('formats timestamp with invalid date fallback', () => {
     const report = generateReport(
-      makeReportData({ timestamp: new Date('invalid') as unknown as Date })
+      makeReportData({ timestamp: new Date('invalid') as unknown as Date }),
     );
     expect(report).toContain('# Vault maintenance report');
     expect(report).toMatch(/\d{1,2}:\d{2}/);

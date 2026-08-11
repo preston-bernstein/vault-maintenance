@@ -44,7 +44,7 @@ function getGlobRegex(pattern: string): RegExp {
  */
 export function matchesExclude(
   relativePath: string,
-  patterns: string[]
+  patterns: string[],
 ): boolean {
   for (const pattern of patterns) {
     if (matchGlob(relativePath, pattern)) return true;
@@ -62,12 +62,10 @@ function matchGlob(path: string, pattern: string): boolean {
   return getGlobRegex(pattern).test(path);
 }
 
-export async function readFileContent(path: string): Promise<string> {
-  return readFile(path, 'utf-8');
-}
-
 /** Read file UTF-8; returns null on any error (permission, ENOENT, etc.). */
-export async function readFileContentSafe(path: string): Promise<string | null> {
+export async function readFileContentSafe(
+  path: string,
+): Promise<string | null> {
   try {
     return await readFile(path, 'utf-8');
   } catch {
@@ -75,7 +73,10 @@ export async function readFileContentSafe(path: string): Promise<string | null> 
   }
 }
 
-export function toRelativePath(absolutePath: string, vaultRoot: string): string {
+export function toRelativePath(
+  absolutePath: string,
+  vaultRoot: string,
+): string {
   return relative(vaultRoot, absolutePath);
 }
 

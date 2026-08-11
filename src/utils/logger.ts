@@ -18,7 +18,10 @@ function timestamp(): string {
  * Start logging to a file under logDir. Creates logDir/YYYY/MM/YYYY-MM-DD.log and
  * writes a run start header. Idempotent: if already logging, does nothing.
  */
-export async function startLogFile(logDir: string, vaultPath: string): Promise<void> {
+export async function startLogFile(
+  logDir: string,
+  vaultPath: string,
+): Promise<void> {
   if (currentLogPath !== null) return;
   const dateStr = toISODateString(new Date());
   const [year, month] = dateStr.split('-');
@@ -53,4 +56,14 @@ export async function endLogFile(exitCode: number): Promise<void> {
 /** True if startLogFile has been called and endLogFile has not yet been called. */
 export function isLogging(): boolean {
   return currentLogPath !== null;
+}
+
+/**
+ * Dual-sink progress logging: writes to stderr when verbose, and appends to the
+ * active log file (if logging is enabled). Awaits the log write so callers never
+ * race a fire-and-forget write against process exit.
+ */
+export async function log(verbose: boolean, message: string): Promise<void> {
+  if (verbose) process.stderr.write(message);
+  if (isLogging()) await writeLogLine(message);
 }

@@ -32,7 +32,7 @@ describe('pipeline phase flags', () => {
       const outputPath = join(tmp, 'scan-out.json');
       try {
         const code = await runPipeline(
-          defaultOpts({ scanOnly: true, output: outputPath })
+          defaultOpts({ scanOnly: true, output: outputPath }),
         );
         expect(code).toBe(0);
         const raw = await readFile(outputPath, 'utf-8');
@@ -50,23 +50,10 @@ describe('pipeline phase flags', () => {
       }
     });
 
-    it('--scan alias: same behavior as --scan-only (scan phase only, output to file)', async () => {
-      const tmp = await mkdtemp(join(tmpdir(), 'vault-scan-alias-'));
-      const outputPath = join(tmp, 'scan-out.json');
-      try {
-        const code = await runPipeline(
-          defaultOpts({ scan: true, output: outputPath })
-        );
-        expect(code).toBe(0);
-        const raw = await readFile(outputPath, 'utf-8');
-        const scan = deserializeScanResult(raw);
-        expect(scan).toBeDefined();
-        expect(scan.fileIndex).toBeInstanceOf(Map);
-        expect(scan.nameIndex).toBeInstanceOf(Map);
-      } finally {
-        await rm(tmp, { recursive: true }).catch(() => {});
-      }
-    });
+    // The --scan/--scan-only alias is normalized to `scanOnly` in index.ts's CLI
+    // parsing layer; runPipeline itself only understands `scanOnly` (see
+    // PipelineOptions), so there is nothing distinct to unit-test here beyond
+    // the scanOnly case above.
   });
 
   describe('--analyze --input', () => {
@@ -79,7 +66,7 @@ describe('pipeline phase flags', () => {
             analyze: true,
             input: SCAN_JSON,
             output: outputPath,
-          })
+          }),
         );
         expect(code).toBe(0);
         const raw = await readFile(outputPath, 'utf-8');
@@ -119,7 +106,7 @@ describe('pipeline phase flags', () => {
           report: true,
           input: ANALYSIS_JSON,
           dryRun: true,
-        })
+        }),
       );
       expect(code).toBe(0);
       const out = stdoutCalls.join('');
@@ -138,7 +125,7 @@ describe('pipeline phase flags', () => {
             scanOnly: true,
             analyze: true,
             output: outputPath,
-          })
+          }),
         );
         expect(code).toBe(0);
         const raw = await readFile(outputPath, 'utf-8');
@@ -158,10 +145,12 @@ describe('pipeline phase flags', () => {
       const tmp = await mkdtemp(join(tmpdir(), 'vault-output-ctx-'));
       const outputPath = join(tmp, 'ignored-output.json');
       const stdoutCalls: string[] = [];
-      const unspy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
-        stdoutCalls.push(String(chunk));
-        return true;
-      });
+      const unspy = vi
+        .spyOn(process.stdout, 'write')
+        .mockImplementation((chunk: unknown) => {
+          stdoutCalls.push(String(chunk));
+          return true;
+        });
       try {
         const code = await runPipeline(
           defaultOpts({
@@ -169,7 +158,7 @@ describe('pipeline phase flags', () => {
             input: ANALYSIS_JSON,
             dryRun: true,
             output: outputPath,
-          })
+          }),
         );
         expect(code).toBe(0);
         const out = stdoutCalls.join('');
@@ -192,9 +181,7 @@ describe('pipeline phase flags', () => {
         return true;
       });
       try {
-        const code = await runPipeline(
-          defaultOpts({ dryRun: true })
-        );
+        const code = await runPipeline(defaultOpts({ dryRun: true }));
         const out = stdoutCalls.join('');
         expect(out).toContain('Vault maintenance report');
         expect(out).toContain('Summary');
@@ -210,7 +197,7 @@ describe('pipeline phase flags', () => {
       const tmp = await mkdtemp(join(tmpdir(), 'vault-logs-'));
       try {
         const code = await runPipeline(
-          defaultOpts({ scanOnly: true, logDir: tmp, verbose: true })
+          defaultOpts({ scanOnly: true, logDir: tmp, verbose: true }),
         );
         expect(code).toBe(0);
         const now = new Date();

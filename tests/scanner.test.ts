@@ -15,7 +15,7 @@ describe('scanVault', () => {
 
     // .obsidian should be excluded
     const obsidianFiles = result.files.filter((f) =>
-      f.relativePath.startsWith('.obsidian')
+      f.relativePath.startsWith('.obsidian'),
     );
     expect(obsidianFiles).toHaveLength(0);
   });
@@ -43,23 +43,25 @@ describe('scanVault', () => {
 
     // Root Note has links to several targets
     const rootLinks = result.links.filter(
-      (l) => l.sourceFile === 'Root Note.md'
+      (l) => l.sourceFile === 'Root Note.md',
     );
     expect(rootLinks.length).toBe(4);
   });
 
   it('writes progress to stderr when verbose', async () => {
-    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    const stderrSpy = vi
+      .spyOn(process.stderr, 'write')
+      .mockImplementation(() => true);
     const result = await scanVault({
       ...defaultScanOptions(),
       verbose: true,
     });
     expect(result.files.length).toBeGreaterThan(0);
     expect(stderrSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/Scanned \d+ files/)
+      expect.stringMatching(/Scanned \d+ files/),
     );
     expect(stderrSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/Found \d+ links/)
+      expect.stringMatching(/Found \d+ links/),
     );
     stderrSpy.mockRestore();
   });

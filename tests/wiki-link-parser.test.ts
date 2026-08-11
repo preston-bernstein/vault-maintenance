@@ -54,15 +54,16 @@ describe('parseWikiLinks', () => {
     const links = parseWikiLinks(content, 'test.md');
 
     expect(links).toHaveLength(3);
-    expect(links.map((l) => l.target)).toEqual([
-      'Page A',
-      'Page B',
-      'Page C',
-    ]);
+    expect(links.map((l) => l.target)).toEqual(['Page A', 'Page B', 'Page C']);
   });
 
   it('tracks line numbers correctly', () => {
-    const content = ['Line one', '[[Link on line 2]]', '', '[[Link on line 4]]'].join('\n');
+    const content = [
+      'Line one',
+      '[[Link on line 2]]',
+      '',
+      '[[Link on line 4]]',
+    ].join('\n');
     const links = parseWikiLinks(content, 'test.md');
 
     expect(links).toHaveLength(2);
@@ -99,11 +100,7 @@ describe('parseWikiLinks', () => {
     const links = parseWikiLinks(content, 'test.md');
 
     expect(links).toHaveLength(3);
-    expect(links.map((l) => l.target)).toEqual([
-      'Before',
-      'Between',
-      'After',
-    ]);
+    expect(links.map((l) => l.target)).toEqual(['Before', 'Between', 'After']);
   });
 
   it('returns empty array for content with no links', () => {

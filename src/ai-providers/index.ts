@@ -19,14 +19,15 @@ export function getApiKey(provider: AIProviderId): string | undefined {
 
 export async function complete(
   prompt: string,
-  config: AIConfig
+  config: AIConfig,
+  verbose = false,
 ): Promise<string | null> {
   const apiKey = getApiKey(config.provider);
   if (!apiKey) return null;
 
   switch (config.provider) {
     case 'claude':
-      return completeClaude(prompt, config, apiKey);
+      return completeClaude(prompt, config, apiKey, verbose);
     case 'openai':
       return completeOpenAI(prompt, config, apiKey);
     default:

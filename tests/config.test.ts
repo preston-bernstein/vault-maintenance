@@ -7,11 +7,18 @@ import { resolve } from 'node:path';
 
 describe('loadConfig', () => {
   it('returns defaults when config file is missing', async () => {
-    const configPath = resolve(import.meta.dirname, 'fixtures/nonexistent-config.json');
+    const configPath = resolve(
+      import.meta.dirname,
+      'fixtures/nonexistent-config.json',
+    );
     const config = await loadConfig(configPath);
 
     expect(config.vaultPath).toBe('/path/to/your/vault');
-    expect(config.excludePatterns).toEqual(['.obsidian/**', '.claude/**', '.DS_Store']);
+    expect(config.excludePatterns).toEqual([
+      '.obsidian/**',
+      '.claude/**',
+      '.DS_Store',
+    ]);
     expect(config.reportFolder).toBe('Development/Vault Reports');
     expect(config.indexCheckDepth).toBe(2);
     expect(config.ai.enabled).toBe(false);
@@ -44,7 +51,7 @@ describe('loadConfig', () => {
         excludePatterns: ['*.tmp'],
         ai: { enabled: true, model: 'claude-3', maxSuggestions: 5 },
       }),
-      'utf-8'
+      'utf-8',
     );
     try {
       const config = await loadConfig(configPath);
@@ -69,7 +76,7 @@ describe('loadConfig', () => {
         vaultPath: '/vault',
         ai: { maxSuggestions: 9999 },
       }),
-      'utf-8'
+      'utf-8',
     );
     try {
       const config = await loadConfig(configPath);
@@ -92,7 +99,7 @@ describe('loadConfig', () => {
         vaultPath: '/vault',
         ai: { enabled: true, provider: 'openai' },
       }),
-      'utf-8'
+      'utf-8',
     );
     try {
       const config = await loadConfig(configPath);
@@ -112,7 +119,7 @@ describe('loadConfig', () => {
         vaultPath: '/vault',
         excludePatterns: ['.git', 123, null, '*.bak'],
       }),
-      'utf-8'
+      'utf-8',
     );
     try {
       const config = await loadConfig(configPath);

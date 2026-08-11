@@ -3,13 +3,14 @@
  */
 
 import type { AIConfig } from '../types.js';
-
-export const CLAUDE_ENV_KEY = 'ANTHROPIC_API_KEY';
+import { formatError } from '../utils/fs-helpers.js';
+import { log } from '../utils/logger.js';
 
 export async function completeClaude(
   prompt: string,
   config: AIConfig,
-  apiKey: string
+  apiKey: string,
+  verbose = false,
 ): Promise<string | null> {
   try {
     const Anthropic = await loadAnthropicSDK();
@@ -23,7 +24,8 @@ export async function completeClaude(
     const text =
       response.content[0]?.type === 'text' ? response.content[0].text : '';
     return text;
-  } catch {
+  } catch (err) {
+    await log(verbose, `AI suggestions failed: ${formatError(err)}\n`);
     return null;
   }
 }

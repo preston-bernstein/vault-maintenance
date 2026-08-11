@@ -32,7 +32,7 @@ function lookupByPath(scan: ScanResult, target: string): VaultFile | null {
 function resolveByPath(
   link: WikiLink,
   target: string,
-  scan: ScanResult
+  scan: ScanResult,
 ): LinkResolution {
   const file = lookupByPath(scan, target);
   return file ? resolved(link, file) : broken(link);
@@ -41,7 +41,7 @@ function resolveByPath(
 function resolveByName(
   link: WikiLink,
   target: string,
-  scan: ScanResult
+  scan: ScanResult,
 ): LinkResolution {
   const ext = extname(target);
   const lookupName = ext ? target.slice(0, -ext.length) : target;
@@ -59,7 +59,7 @@ function resolveByName(
 
   // Multiple files share this name → ambiguous; prefer shortest path (Obsidian behavior)
   const sorted = [...candidates].sort(
-    (a, b) => a.relativePath.length - b.relativePath.length
+    (a, b) => a.relativePath.length - b.relativePath.length,
   );
 
   return {
@@ -74,7 +74,7 @@ function resolveByName(
 function tryFileWithExtension(
   link: WikiLink,
   target: string,
-  scan: ScanResult
+  scan: ScanResult,
 ): LinkResolution {
   const filename = lastPathSegment(target);
   const candidates = scan.filenameIndex.get(filename);

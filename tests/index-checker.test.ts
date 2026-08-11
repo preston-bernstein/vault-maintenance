@@ -22,7 +22,7 @@ describe('checkIndexes', () => {
     const reports = checkIndexes(scan, 2);
 
     const folderCReport = reports.find(
-      (r) => r.indexFile.relativePath === 'FolderC/Index.md'
+      (r) => r.indexFile.relativePath === 'FolderC/Index.md',
     );
     expect(folderCReport).toBeDefined();
 
@@ -36,7 +36,7 @@ describe('checkIndexes', () => {
     const reports = checkIndexes(scan, 2);
 
     const folderCReport = reports.find(
-      (r) => r.indexFile.relativePath === 'FolderC/Index.md'
+      (r) => r.indexFile.relativePath === 'FolderC/Index.md',
     );
     expect(folderCReport).toBeDefined();
 
@@ -50,7 +50,7 @@ describe('checkIndexes', () => {
     const reports = checkIndexes(scan, 2);
 
     const folderAReport = reports.find(
-      (r) => r.indexFile.relativePath === 'FolderA/Overview.md'
+      (r) => r.indexFile.relativePath === 'FolderA/Overview.md',
     );
     expect(folderAReport).toBeDefined();
 
@@ -78,7 +78,9 @@ describe('indexReportHasIssues', () => {
   it('returns true when missing links exist', () => {
     const report: IndexReport = {
       indexFile,
-      missingLinks: [{ relativePath: 'a.md', name: 'a', absolutePath: '/a.md' }],
+      missingLinks: [
+        { relativePath: 'a.md', name: 'a', absolutePath: '/a.md' },
+      ],
       staleLinks: [],
     };
     expect(indexReportHasIssues(report)).toBe(true);

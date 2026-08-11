@@ -19,7 +19,10 @@ vi.mock('@anthropic-ai/sdk', () => ({
   },
 }));
 
-const makeBrokenLink = (target: string, sourceFile = 'test.md'): LinkResolution => ({
+const makeBrokenLink = (
+  target: string,
+  sourceFile = 'test.md',
+): LinkResolution => ({
   link: {
     raw: `[[${target}]]`,
     target,
@@ -41,7 +44,7 @@ describe('suggestFixes', () => {
     const result = await suggestFixes(
       [makeBrokenLink('Missing')],
       emptyScanResult(),
-      defaultAIConfig()
+      defaultAIConfig(),
     );
 
     expect(result).toEqual([]);
@@ -49,11 +52,7 @@ describe('suggestFixes', () => {
   });
 
   it('returns empty array when no broken links', async () => {
-    const result = await suggestFixes(
-      [],
-      emptyScanResult(),
-      defaultAIConfig()
-    );
+    const result = await suggestFixes([], emptyScanResult(), defaultAIConfig());
     expect(result).toEqual([]);
   });
 
@@ -90,7 +89,7 @@ describe('suggestFixes', () => {
     const result = await suggestFixes(
       [makeBrokenLink('X')],
       emptyScanResult(),
-      { ...defaultAIConfig(), provider: 'openai', model: 'gpt-4o-mini' }
+      { ...defaultAIConfig(), provider: 'openai', model: 'gpt-4o-mini' },
     );
 
     expect(result).toEqual([]);
@@ -138,7 +137,7 @@ describe('suggestFixes', () => {
       expect(result[0]!.suggestedTarget).toBe('Y.md');
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.openai.com/v1/chat/completions',
-        expect.any(Object)
+        expect.any(Object),
       );
     } finally {
       if (originalEnv !== undefined) process.env.OPENAI_API_KEY = originalEnv;
@@ -149,13 +148,11 @@ describe('suggestFixes', () => {
 });
 
 describe('parseSuggestions', () => {
-  const brokenLinks = [
-    makeBrokenLink('Broken A'),
-    makeBrokenLink('Broken B'),
-  ];
+  const brokenLinks = [makeBrokenLink('Broken A'), makeBrokenLink('Broken B')];
 
   it('parses valid JSON array and maps to broken links', () => {
-    const text = '[{"brokenTarget":"Broken A","suggestedTarget":"path/Fix.md","confidence":0.85,"reasoning":"match"}]';
+    const text =
+      '[{"brokenTarget":"Broken A","suggestedTarget":"path/Fix.md","confidence":0.85,"reasoning":"match"}]';
     const result = parseSuggestions(text, brokenLinks);
     expect(result).toHaveLength(1);
     expect(result[0].brokenLink.target).toBe('Broken A');
@@ -165,20 +162,23 @@ describe('parseSuggestions', () => {
   });
 
   it('extracts JSON from markdown code block', () => {
-    const text = '```json\n[{"brokenTarget":"Broken A","suggestedTarget":"x.md","confidence":0.6,"reasoning":"r"}]\n```';
+    const text =
+      '```json\n[{"brokenTarget":"Broken A","suggestedTarget":"x.md","confidence":0.6,"reasoning":"r"}]\n```';
     const result = parseSuggestions(text, brokenLinks);
     expect(result).toHaveLength(1);
     expect(result[0].suggestedTarget).toBe('x.md');
   });
 
   it('filters out suggestions with confidence < 0.5', () => {
-    const text = '[{"brokenTarget":"Broken A","suggestedTarget":"x.md","confidence":0.3,"reasoning":"r"}]';
+    const text =
+      '[{"brokenTarget":"Broken A","suggestedTarget":"x.md","confidence":0.3,"reasoning":"r"}]';
     const result = parseSuggestions(text, brokenLinks);
     expect(result).toHaveLength(0);
   });
 
   it('filters out suggestions for unknown broken target', () => {
-    const text = '[{"brokenTarget":"NotInList","suggestedTarget":"x.md","confidence":0.9,"reasoning":"r"}]';
+    const text =
+      '[{"brokenTarget":"NotInList","suggestedTarget":"x.md","confidence":0.9,"reasoning":"r"}]';
     const result = parseSuggestions(text, brokenLinks);
     expect(result).toHaveLength(0);
   });

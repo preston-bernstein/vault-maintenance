@@ -3,7 +3,6 @@
  * compares its links to sibling files (missing links) and to the vault (stale links).
  */
 
-import { getMarkdownFiles } from './scanner.js';
 import { groupBy } from './utils/array-helpers.js';
 import { checkSingleIndex } from './index-checker/check-single.js';
 import type { IndexReport, ScanResult } from './types.js';
@@ -20,11 +19,8 @@ export function indexReportHasIssues(report: IndexReport): boolean {
  * Find all Index.md and Overview.md files in the vault,
  * then compare their links against files in their parent folder.
  */
-export function checkIndexes(
-  scan: ScanResult,
-  depth: number
-): IndexReport[] {
-  const mdFiles = scan.mdFiles ?? getMarkdownFiles(scan);
+export function checkIndexes(scan: ScanResult, depth: number): IndexReport[] {
+  const mdFiles = scan.mdFiles;
   const allVaultNames = new Set(scan.files.map((f) => f.name));
   const linksBySource = groupBy(scan.links, (l) => l.sourceFile);
   const indexFiles = mdFiles.filter((f) => INDEX_NAMES.has(f.name));
@@ -33,7 +29,7 @@ export function checkIndexes(
   for (const indexFile of indexFiles) {
     const indexLinks = linksBySource.get(indexFile.relativePath) ?? [];
     reports.push(
-      checkSingleIndex(indexFile, depth, mdFiles, allVaultNames, indexLinks)
+      checkSingleIndex(indexFile, depth, mdFiles, allVaultNames, indexLinks),
     );
   }
 

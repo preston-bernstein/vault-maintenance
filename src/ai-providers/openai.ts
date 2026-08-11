@@ -4,12 +4,10 @@
 
 import type { AIConfig } from '../types.js';
 
-export const OPENAI_ENV_KEY = 'OPENAI_API_KEY';
-
 export async function completeOpenAI(
   prompt: string,
   config: AIConfig,
-  apiKey: string
+  apiKey: string,
 ): Promise<string | null> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',

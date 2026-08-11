@@ -17,7 +17,7 @@ function targetName(link: WikiLink): string {
 export function isInScope(
   filePath: string,
   scopeDir: string,
-  depth: number
+  depth: number,
 ): boolean {
   const rel = scopeDir === '.' ? filePath : relative(scopeDir, filePath);
   if (rel.startsWith('..')) return false;
@@ -31,7 +31,7 @@ export function checkSingleIndex(
   depth: number,
   mdFiles: VaultFile[],
   allVaultNames: Set<string>,
-  indexLinks: WikiLink[]
+  indexLinks: WikiLink[],
 ): IndexReport {
   const indexDir = dirname(indexFile.relativePath);
 

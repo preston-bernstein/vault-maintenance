@@ -15,7 +15,7 @@ const FENCE_RE = /^```/;
  */
 export function parseWikiLinks(
   content: string,
-  sourceFile: string
+  sourceFile: string,
 ): WikiLink[] {
   if (typeof content !== 'string') return [];
   const links: WikiLink[] = [];

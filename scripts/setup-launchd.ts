@@ -7,6 +7,7 @@ import { homedir } from 'node:os';
 
 const LABEL = 'app.vault-maintenance';
 const PROJECT_DIR = join(import.meta.dirname, '..');
+const logDir = join(homedir(), 'Library', 'Logs', 'vault-maintenance');
 
 // Get the absolute path to the Node binary currently in use
 const nodePath = execSync('which node', { encoding: 'utf-8' }).trim();
@@ -25,6 +26,8 @@ const plist = `<?xml version="1.0" encoding="UTF-8"?>
         <string>tsx</string>
         <string>${join(PROJECT_DIR, 'src', 'index.ts')}</string>
         <string>--verbose</string>
+        <string>--log-dir</string>
+        <string>${logDir}</string>
     </array>
 
     <key>WorkingDirectory</key>

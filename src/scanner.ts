@@ -13,7 +13,7 @@ import {
   toRelativePath,
   isMarkdownFile,
 } from './utils/fs-helpers.js';
-import { writeLogLine, isLogging } from './utils/logger.js';
+import { writeLogLine, isLogging, log } from './utils/logger.js';
 import { parseWikiLinks } from './utils/wiki-link-parser.js';
 
 /** Max number of .md files read in parallel when extracting links. */
@@ -62,14 +62,18 @@ export async function scanVault(options: ScanOptions): Promise<ScanResult> {
   for (let i = 0; i < mdFiles.length; i += READ_CONCURRENCY) {
     const chunk = mdFiles.slice(i, i + READ_CONCURRENCY);
     const contents = await Promise.all(
-      chunk.map((f) => readFileContentSafe(f.absolutePath))
+      chunk.map((f) => readFileContentSafe(f.absolutePath)),
     );
-    for (let j = 0; j < chunk.length; j++) {
-      const content = contents[j];
-      if (content !== null) {
-        const fileLinks = parseWikiLinks(content, chunk[j].relativePath);
-        for (let k = 0; k < fileLinks.length; k++) links.push(fileLinks[k]);
+    for (const [j, content] of contents.entries()) {
+      if (content === null) {
+        await log(
+          verbose ?? false,
+          `Warning: failed to read ${chunk[j].relativePath}, skipping\n`,
+        );
+        continue;
       }
+      const fileLinks = parseWikiLinks(content, chunk[j].relativePath);
+      links.push(...fileLinks);
     }
   }
 
@@ -81,7 +85,9 @@ export async function scanVault(options: ScanOptions): Promise<ScanResult> {
 
 /** All markdown files from a scan result. Uses precomputed mdFiles when present. */
 export function getMarkdownFiles(scan: ScanResult): VaultFile[] {
-  return scan.mdFiles ?? scan.files.filter((f) => isMarkdownFile(f.relativePath));
+  return (
+    scan.mdFiles ?? scan.files.filter((f) => isMarkdownFile(f.relativePath))
+  );
 }
 
 /** Count of markdown files. O(1) when scan has mdFiles. */
