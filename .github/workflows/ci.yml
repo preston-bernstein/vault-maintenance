@@ -1,24 +1,27 @@
 name: CI
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - name: Lint
-        run: npm run lint
-      - name: Format check
-        run: npm run format:check
-      - name: Build
-        run: npm run build
-      - name: Test
-        run: npm run test
+  ci:
+    uses: preston-bernstein/ci-workflows/.github/workflows/node.yml@v1
+    with:
+      node-versions: '["22"]'
+      lint: npm run lint
+      format-check: npm run format:check
+      test: npm run test
+      build: npm run build
+
+  workflows:
+    uses: preston-bernstein/ci-workflows/.github/workflows/actions-lint.yml@v1
