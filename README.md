@@ -157,8 +157,6 @@ Without `--input`, `--analyze` runs the scan in memory first; without `--input`,
 | `src/config.ts` | Load and merge `vault-maintenance.config.json` |
 | `tests/` | Vitest tests; fixture vault in `tests/fixtures/test-vault/` |
 
-For more detail (types, conventions), see [CLAUDE.md](CLAUDE.md).
-
 ## Scripts
 
 | Command | Description |
@@ -183,7 +181,7 @@ The repo is set up for [Cursor](https://cursor.com) and VS Code (format-on-save,
 
 ## Development note
 
-This project was developed with the help of AI-assisted coding tools (e.g. Cursor, Claude). The codebase is structured for clarity and maintainability; see [CLAUDE.md](CLAUDE.md) for architecture and conventions.
+This project was developed with the help of AI-assisted coding tools (e.g. Cursor, Claude).
 
 ## Changelog
 

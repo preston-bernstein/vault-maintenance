@@ -25,3 +25,8 @@ coverage/
 *.config.local.json
 *.key
 *.pem
+
+# Local agent tooling and working notes, kept out of the repo
+.cursor/
+CLAUDE.md
+docs/POLISH-*.md
