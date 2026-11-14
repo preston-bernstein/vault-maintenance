@@ -1,0 +1,5 @@
+# Existing findings accepted in the pack-compliance pass. One per line: <check> <path> <reason>
+name src/utils existing name; rename when the module is next reworked
+name src/utils/array-helpers.ts existing name; rename when the module is next reworked
+name src/utils/fs-helpers.ts existing name; rename when the module is next reworked
+name tests/helpers.ts existing name; rename when the module is next reworked

@@ -1,0 +1,133 @@
+{
+ "_reason": "Existing over-limit functions accepted on 2026-11-13; new code must stay within the limits. Fix them when touched.",
+ "functions": {
+  "src/index-checker/check-single.ts::checkSingleIndex": {
+   "length": 27,
+   "token": 127,
+   "param": 5,
+   "ccn": 2,
+   "nd": 0,
+   "nloc": 17
+  },
+  "src/reporter/sections.ts::pushHeaderSection": {
+   "length": 14,
+   "token": 89,
+   "param": 5,
+   "ccn": 1,
+   "nd": 0,
+   "nloc": 14
+  },
+  "src/reporter/sections.ts::pushOptionalTable": {
+   "length": 17,
+   "token": 101,
+   "param": 7,
+   "ccn": 3,
+   "nd": 0,
+   "nloc": 17
+  },
+  "src/run-pipeline.ts::emitPhaseOutput": {
+   "length": 62,
+   "token": 307,
+   "param": 1,
+   "ccn": 11,
+   "nd": 0,
+   "nloc": 58
+  },
+  "src/run-pipeline.ts::resolvePhases": {
+   "length": 22,
+   "token": 144,
+   "param": 1,
+   "ccn": 13,
+   "nd": 0,
+   "nloc": 19
+  },
+  "src/run-pipeline.ts::runPipeline": {
+   "length": 100,
+   "token": 571,
+   "param": 1,
+   "ccn": 24,
+   "nd": 0,
+   "nloc": 92
+  },
+  "src/scanner.ts::scanVault": {
+   "length": 57,
+   "token": 431,
+   "param": 1,
+   "ccn": 12,
+   "nd": 0,
+   "nloc": 45
+  },
+  "src/utils/wiki-link-parser.ts::parseWikiLinks": {
+   "length": 52,
+   "token": 262,
+   "param": 2,
+   "ccn": 7,
+   "nd": 0,
+   "nloc": 42
+  },
+  "tests/ai-suggester.test.ts::(anonymous)": {
+   "length": 110,
+   "token": 87,
+   "param": 0,
+   "ccn": 1,
+   "nd": 0,
+   "nloc": 10
+  },
+  "tests/config.test.ts::(anonymous)": {
+   "length": 124,
+   "token": 68,
+   "param": 0,
+   "ccn": 1,
+   "nd": 0,
+   "nloc": 8
+  },
+  "tests/index-checker.test.ts::(anonymous)": {
+   "length": 55,
+   "token": 46,
+   "param": 0,
+   "ccn": 1,
+   "nd": 0,
+   "nloc": 6
+  },
+  "tests/pipeline-phase.test.ts::(anonymous)": {
+   "length": 226,
+   "token": 82,
+   "param": 0,
+   "ccn": 1,
+   "nd": 0,
+   "nloc": 10
+  },
+  "tests/reporter.test.ts::(anonymous)": {
+   "length": 144,
+   "token": 82,
+   "param": 0,
+   "ccn": 1,
+   "nd": 0,
+   "nloc": 10
+  },
+  "tests/resolver.test.ts::(anonymous)": {
+   "length": 73,
+   "token": 57,
+   "param": 0,
+   "ccn": 1,
+   "nd": 0,
+   "nloc": 7
+  },
+  "tests/scanner.test.ts::(anonymous)": {
+   "length": 60,
+   "token": 57,
+   "param": 0,
+   "ccn": 1,
+   "nd": 0,
+   "nloc": 7
+  },
+  "tests/wiki-link-parser.test.ts::(anonymous)": {
+   "length": 121,
+   "token": 102,
+   "param": 0,
+   "ccn": 1,
+   "nd": 0,
+   "nloc": 12
+  }
+ }
+}
