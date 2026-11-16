@@ -5,5 +5,5 @@
   "description": "Pinned tools for the core duplication gate",
   "type": "module",
   "engines": { "node": ">=22" },
-  "dependencies": { "jscpd": "5.4.2" }
+  "dependencies": { "jscpd": "5.4.3" }
 }
