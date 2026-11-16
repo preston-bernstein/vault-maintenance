@@ -50,9 +50,11 @@ jobs:
 
       - name: Put the gate tools on PATH
         run: |
-          echo "$RUNNER_TEMP/gate-tools/bin" >> "$GITHUB_PATH"
-          echo "$RUNNER_TEMP/gate-tools/venv/bin" >> "$GITHUB_PATH"
-          echo "$GITHUB_WORKSPACE/ci-tools/node_modules/.bin" >> "$GITHUB_PATH"
+          {
+            echo "$RUNNER_TEMP/gate-tools/bin"
+            echo "$RUNNER_TEMP/gate-tools/venv/bin"
+            echo "$GITHUB_WORKSPACE/ci-tools/node_modules/.bin"
+          } >> "$GITHUB_PATH"
 
       - name: Core gate
         run: bash scripts/core-validate.sh
