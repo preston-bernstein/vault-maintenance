@@ -15,14 +15,47 @@ permissions:
   contents: read
 
 jobs:
+  # The js and ts gates run eslint, tsc and the tests, so this job passes no lint or test input.
   ci:
     uses: preston-bernstein/ci-workflows/.github/workflows/node.yml@980585f4e9c3c1ef982cb934e153f925121fe0c0 # v1
     with:
       node-versions: '["22"]'
-      lint: npm run lint
       format-check: npm run format:check
-      test: npm run test
       build: npm run build
+      checks: |
+        bash scripts/js-validate.sh
+        bash scripts/ts-validate.sh
 
-  workflows:
-    uses: preston-bernstein/ci-workflows/.github/workflows/actions-lint.yml@980585f4e9c3c1ef982cb934e153f925121fe0c0 # v1
+  # The core, github-actions and writing gates. They need tools the reusable job does not install.
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out the full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install the pinned gate tools
+        run: bash scripts/install-gate-tools.sh "$RUNNER_TEMP/gate-tools"
+
+      - name: Put the gate tools on PATH
+        run: |
+          echo "$RUNNER_TEMP/gate-tools/bin" >> "$GITHUB_PATH"
+          echo "$RUNNER_TEMP/gate-tools/venv/bin" >> "$GITHUB_PATH"
+          echo "$GITHUB_WORKSPACE/ci-tools/node_modules/.bin" >> "$GITHUB_PATH"
+
+      - name: Core gate
+        run: bash scripts/core-validate.sh
+
+      - name: GitHub Actions gate
+        run: bash scripts/gha-validate.sh
+
+      - name: Writing gate
+        run: bash scripts/writing-validate.sh
