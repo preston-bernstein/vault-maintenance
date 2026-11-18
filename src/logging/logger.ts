@@ -6,7 +6,7 @@
 
 import { appendFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { toISODateString } from './format.js';
+import { toISODateString } from '../formatting/format.js';
 
 let currentLogPath: string | null = null;
 

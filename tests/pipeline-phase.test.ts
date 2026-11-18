@@ -8,7 +8,8 @@ import {
   deserializeScanResult,
   deserializeReportData,
 } from '../src/serialization.js';
-import { TEST_VAULT } from './helpers.js';
+import type { ReportData } from '../src/types.js';
+import { TEST_VAULT } from './test-vault.js';
 
 const FIXTURES_DIR = resolve(import.meta.dirname, 'fixtures');
 const SCAN_JSON = join(FIXTURES_DIR, 'scan.json');
@@ -23,6 +24,31 @@ function defaultOpts(overrides: Record<string, unknown> = {}) {
     configPath: NO_CONFIG,
     ...overrides,
   };
+}
+
+/** Runs the pipeline with --output in a temp dir and returns the analysis it wrote. */
+async function runToAnalysisFile(
+  prefix: string,
+  flags: Record<string, unknown>,
+): Promise<ReportData> {
+  const tmp = await mkdtemp(join(tmpdir(), prefix));
+  try {
+    const code = await runPipeline(
+      defaultOpts({ ...flags, output: join(tmp, 'analysis-out.json') }),
+    );
+    expect(code).toBe(0);
+    const raw = await readFile(join(tmp, 'analysis-out.json'), 'utf-8');
+    return deserializeReportData(raw);
+  } finally {
+    await rm(tmp, { recursive: true }).catch(() => {});
+  }
+}
+
+function expectAnalysisShape(data: ReportData): void {
+  expect(data).toBeDefined();
+  expect(data.timestamp).toBeInstanceOf(Date);
+  expect(Array.isArray(data.brokenLinks)).toBe(true);
+  expect(Array.isArray(data.indexReports)).toBe(true);
 }
 
 describe('pipeline phase flags', () => {
@@ -55,36 +81,25 @@ describe('pipeline phase flags', () => {
     // PipelineOptions), so there is nothing distinct to unit-test here beyond
     // the scanOnly case above.
   });
+});
 
+describe('pipeline phase flags', () => {
   describe('--analyze --input', () => {
     it('reads scan from file and writes valid analysis JSON to --output', async () => {
-      const tmp = await mkdtemp(join(tmpdir(), 'vault-analyze-'));
-      const outputPath = join(tmp, 'analysis-out.json');
-      try {
-        const code = await runPipeline(
-          defaultOpts({
-            analyze: true,
-            input: SCAN_JSON,
-            output: outputPath,
-          }),
-        );
-        expect(code).toBe(0);
-        const raw = await readFile(outputPath, 'utf-8');
-        const data = deserializeReportData(raw);
-        expect(data).toBeDefined();
-        expect(data.timestamp).toBeInstanceOf(Date);
-        expect(typeof data.totalFiles).toBe('number');
-        expect(typeof data.totalLinks).toBe('number');
-        expect(Array.isArray(data.brokenLinks)).toBe(true);
-        expect(Array.isArray(data.ambiguousLinks)).toBe(true);
-        expect(Array.isArray(data.indexReports)).toBe(true);
-        expect(Array.isArray(data.aiSuggestions)).toBe(true);
-      } finally {
-        await rm(tmp, { recursive: true }).catch(() => {});
-      }
+      const data = await runToAnalysisFile('vault-analyze-', {
+        analyze: true,
+        input: SCAN_JSON,
+      });
+      expectAnalysisShape(data);
+      expect(typeof data.totalFiles).toBe('number');
+      expect(typeof data.totalLinks).toBe('number');
+      expect(Array.isArray(data.ambiguousLinks)).toBe(true);
+      expect(Array.isArray(data.aiSuggestions)).toBe(true);
     });
   });
+});
 
+describe('pipeline phase flags', () => {
   describe('--report --input', () => {
     let stdoutCalls: string[];
 
@@ -114,32 +129,21 @@ describe('pipeline phase flags', () => {
       expect(out).toContain('Summary');
     });
   });
+});
 
+describe('pipeline phase flags', () => {
   describe('stacked flags (--scan-only --analyze)', () => {
     it('runs read then analyze in one process and outputs analysis (no report)', async () => {
-      const tmp = await mkdtemp(join(tmpdir(), 'vault-stack-'));
-      const outputPath = join(tmp, 'analysis-out.json');
-      try {
-        const code = await runPipeline(
-          defaultOpts({
-            scanOnly: true,
-            analyze: true,
-            output: outputPath,
-          }),
-        );
-        expect(code).toBe(0);
-        const raw = await readFile(outputPath, 'utf-8');
-        const data = deserializeReportData(raw);
-        expect(data).toBeDefined();
-        expect(data.timestamp).toBeInstanceOf(Date);
-        expect(Array.isArray(data.brokenLinks)).toBe(true);
-        expect(Array.isArray(data.indexReports)).toBe(true);
-      } finally {
-        await rm(tmp, { recursive: true }).catch(() => {});
-      }
+      const data = await runToAnalysisFile('vault-stack-', {
+        scanOnly: true,
+        analyze: true,
+      });
+      expectAnalysisShape(data);
     });
   });
+});
 
+describe('pipeline phase flags', () => {
   describe('--output is contextual', () => {
     it('when last phase is report, --output is ignored and report goes to stdout with dry-run', async () => {
       const tmp = await mkdtemp(join(tmpdir(), 'vault-output-ctx-'));
@@ -172,7 +176,9 @@ describe('pipeline phase flags', () => {
       }
     });
   });
+});
 
+describe('pipeline phase flags', () => {
   describe('full pipeline (no phase flags)', () => {
     it('runs read → analyze → report and outputs report to stdout with dry-run', async () => {
       const stdoutCalls: string[] = [];
@@ -216,7 +222,9 @@ describe('pipeline phase flags', () => {
       }
     });
   });
+});
 
+describe('pipeline phase flags', () => {
   describe('report folder self-exclusion', () => {
     it('never scans its own reportFolder, even if excludePatterns omits it', async () => {
       const tmp = await mkdtemp(join(tmpdir(), 'vault-report-exclude-'));

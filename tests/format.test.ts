@@ -3,7 +3,7 @@ import {
   formatError,
   isValidDate,
   toISODateString,
-} from '../src/utils/format.js';
+} from '../src/formatting/format.js';
 
 describe('formatError', () => {
   it('returns message for Error', () => {

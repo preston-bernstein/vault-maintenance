@@ -4,7 +4,7 @@ import {
   getMarkdownFiles,
   getMarkdownFileCount,
 } from '../src/scanner.js';
-import { defaultScanOptions } from './helpers.js';
+import { defaultScanOptions } from './test-vault.js';
 
 describe('scanVault', () => {
   it('finds all markdown files excluding .obsidian', async () => {
@@ -35,7 +35,9 @@ describe('scanVault', () => {
     expect(overviews).toBeDefined();
     expect(overviews!.length).toBe(2);
   });
+});
 
+describe('scanVault', () => {
   it('extracts links from all markdown files', async () => {
     const result = await scanVault(defaultScanOptions());
 

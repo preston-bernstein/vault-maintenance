@@ -43,6 +43,6 @@
 ## Traps
 
 - The files `scripts/*-validate.sh`, `scripts/core-*.py`, `scripts/workflow-check.py`, `scripts/package-check.mjs`, `scripts/writing-validate.sh`, `scripts/vale-central.ini` and `scripts/styles` come from the packs. Do not edit them. Fix the code instead.
-- `.core-baseline.json` may only shrink. `.core-config` holds each changed limit with a reason.
+- No function baseline exists: every function meets the limits. `.core-config` holds each changed limit with a reason.
 - The gate tools are pinned with hashes in `ci-tools/` and `scripts/install-gate-tools.sh`. Change a version and its hash together.
 - `.github/workflows/ci.yml` runs each gate once. Do not add the same gate to a second job.

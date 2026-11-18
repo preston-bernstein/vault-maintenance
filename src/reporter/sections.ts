@@ -3,7 +3,7 @@
  * markdown report. Used by reporter.ts generateReport().
  */
 
-import { stripMdExtension } from '../utils/fs-helpers.js';
+import { stripMdExtension } from '../vault-fs/vault-files.js';
 import type {
   AISuggestion,
   IndexReport,
@@ -19,36 +19,40 @@ function targetToCode(target: string): string {
   return `\`[[${target}]]\``;
 }
 
-function pushOptionalTable<T>(
-  lines: string[],
-  title: string,
-  emptyMessage: string,
-  header: string,
-  separator: string,
-  items: T[],
-  rowFn: (item: T) => string,
-): void {
-  lines.push('', title, '');
-  if (items.length === 0) {
-    lines.push(emptyMessage);
+interface OptionalTable<T> {
+  title: string;
+  emptyMessage: string;
+  header: string;
+  separator: string;
+  items: T[];
+  rowFn: (item: T) => string;
+}
+
+function pushOptionalTable<T>(lines: string[], table: OptionalTable<T>): void {
+  lines.push('', table.title, '');
+  if (table.items.length === 0) {
+    lines.push(table.emptyMessage);
   } else {
-    lines.push(header, separator);
-    for (const item of items) lines.push(rowFn(item));
+    lines.push(table.header, table.separator);
+    for (const item of table.items) lines.push(table.rowFn(item));
   }
 }
 
-export function pushHeaderSection(
-  lines: string[],
-  dateStr: string,
-  ts: string,
-  totalFiles: number,
-  totalLinks: number,
-): void {
+export interface ReportHeader {
+  dateStr: string;
+  ts: string;
+  totalFiles: number;
+  totalLinks: number;
+}
+
+export function pushHeaderSection(lines: string[], header: ReportHeader): void {
   lines.push('# Vault maintenance report');
   lines.push('');
-  lines.push(`## 🗓️ ${dateStr} ${ts}`);
+  lines.push(`## 🗓️ ${header.dateStr} ${header.ts}`);
   lines.push('');
-  lines.push(`Scanned ${totalFiles} files. Found ${totalLinks} links.`);
+  lines.push(
+    `Scanned ${header.totalFiles} files. Found ${header.totalLinks} links.`,
+  );
   lines.push('');
 }
 
@@ -56,16 +60,15 @@ export function pushBrokenLinksSection(
   lines: string[],
   brokenLinks: LinkResolution[],
 ): void {
-  pushOptionalTable(
-    lines,
-    `## 🔗 Broken links (${brokenLinks.length})`,
-    'None found.',
-    '| Source | Broken link | Line |',
-    '|--------|-------------|------|',
-    brokenLinks,
-    (r: LinkResolution) =>
+  pushOptionalTable(lines, {
+    title: `## 🔗 Broken links (${brokenLinks.length})`,
+    emptyMessage: 'None found.',
+    header: '| Source | Broken link | Line |',
+    separator: '|--------|-------------|------|',
+    items: brokenLinks,
+    rowFn: (r: LinkResolution) =>
       `| ${pathToWikiLink(r.link.sourceFile)} | ${targetToCode(r.link.target)} | ${r.link.line} |`,
-  );
+  });
 }
 
 export function pushAISuggestionsSection(
@@ -89,20 +92,19 @@ export function pushAmbiguousLinksSection(
   lines: string[],
   ambiguousLinks: LinkResolution[],
 ): void {
-  pushOptionalTable(
-    lines,
-    `## 🔀 Ambiguous links (${ambiguousLinks.length})`,
-    'None found.',
-    '| Source | Link | Possible targets |',
-    '|--------|------|-----------------|',
-    ambiguousLinks,
-    (r: LinkResolution) => {
+  pushOptionalTable(lines, {
+    title: `## 🔀 Ambiguous links (${ambiguousLinks.length})`,
+    emptyMessage: 'None found.',
+    header: '| Source | Link | Possible targets |',
+    separator: '|--------|------|-----------------|',
+    items: ambiguousLinks,
+    rowFn: (r: LinkResolution) => {
       const targets = r.candidates
         .map((c) => stripMdExtension(c.relativePath))
         .join(', ');
       return `| ${pathToWikiLink(r.link.sourceFile)} | ${targetToCode(r.link.target)} | ${targets} |`;
     },
-  );
+  });
 }
 
 export function pushStaleIndexesSection(

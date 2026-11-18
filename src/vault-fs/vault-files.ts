@@ -1,6 +1,6 @@
 /**
- * File system helpers: directory walk, glob-style exclude matching, safe read,
- * and path helpers (relative, last segment). Error/date formatting lives in
+ * Vault files: directory walk, glob-style exclude matching, safe read,
+ * and paths (relative, last segment). Error/date formatting lives in
  * ./format.js, since those aren't filesystem-specific.
  */
 
