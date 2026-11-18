@@ -4,9 +4,9 @@
  * JSON suggestions. No-ops when API key is missing or provider fails.
  */
 
-import { stripMdExtension } from './utils/fs-helpers.js';
-import { formatError } from './utils/format.js';
-import { log, isLogging, writeLogLine } from './utils/logger.js';
+import { stripMdExtension } from './vault-fs/vault-files.js';
+import { formatError } from './formatting/format.js';
+import { log, isLogging, writeLogLine } from './logging/logger.js';
 import { getApiKey, complete, PROVIDER_ENV } from './ai-providers/index.js';
 import type {
   AIConfig,

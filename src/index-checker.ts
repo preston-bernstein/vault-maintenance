@@ -3,7 +3,7 @@
  * compares its links to sibling files (missing links) and to the vault (stale links).
  */
 
-import { groupBy } from './utils/array-helpers.js';
+import { groupBy } from './collections/map-lists.js';
 import { checkSingleIndex } from './index-checker/check-single.js';
 import type { IndexReport, ScanResult } from './types.js';
 
@@ -21,16 +21,18 @@ export function indexReportHasIssues(report: IndexReport): boolean {
  */
 export function checkIndexes(scan: ScanResult, depth: number): IndexReport[] {
   const mdFiles = scan.mdFiles;
-  const allVaultNames = new Set(scan.files.map((f) => f.name));
+  const scope = {
+    depth,
+    mdFiles,
+    allVaultNames: new Set(scan.files.map((f) => f.name)),
+  };
   const linksBySource = groupBy(scan.links, (l) => l.sourceFile);
   const indexFiles = mdFiles.filter((f) => INDEX_NAMES.has(f.name));
   const reports: IndexReport[] = [];
 
   for (const indexFile of indexFiles) {
     const indexLinks = linksBySource.get(indexFile.relativePath) ?? [];
-    reports.push(
-      checkSingleIndex(indexFile, depth, mdFiles, allVaultNames, indexLinks),
-    );
+    reports.push(checkSingleIndex(indexFile, indexLinks, scope));
   }
 
   return reports;

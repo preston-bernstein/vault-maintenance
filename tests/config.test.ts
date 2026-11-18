@@ -38,7 +38,9 @@ describe('loadConfig', () => {
       await rm(tmp, { recursive: true });
     }
   });
+});
 
+describe('loadConfig', () => {
   it('merges valid config with defaults', async () => {
     const tmp = await mkdtemp(join(tmpdir(), 'vault-config-'));
     const configPath = join(tmp, 'config.json');
@@ -66,7 +68,9 @@ describe('loadConfig', () => {
       await rm(tmp, { recursive: true });
     }
   });
+});
 
+describe('loadConfig', () => {
   it('uses defaults for missing or invalid nested fields', async () => {
     const tmp = await mkdtemp(join(tmpdir(), 'vault-config-'));
     const configPath = join(tmp, 'config.json');
@@ -89,7 +93,9 @@ describe('loadConfig', () => {
       await rm(tmp, { recursive: true });
     }
   });
+});
 
+describe('loadConfig', () => {
   it('accepts ai.provider openai and defaults model for it', async () => {
     const tmp = await mkdtemp(join(tmpdir(), 'vault-config-'));
     const configPath = join(tmp, 'config.json');

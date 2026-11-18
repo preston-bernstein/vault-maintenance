@@ -1,5 +1,5 @@
 /**
- * Small collection helpers: groupBy (items → Map<key, T[]>) and pushToMapList (append to map-of-arrays).
+ * Map-of-list functions: groupBy (items → Map<key, T[]>) and pushToMapList (append to map-of-arrays).
  */
 export function groupBy<T, K extends string | number | symbol>(
   items: Iterable<T>,

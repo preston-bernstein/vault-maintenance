@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { suggestFixes, parseSuggestions } from '../src/ai-suggester.js';
 import type { LinkResolution } from '../src/types.js';
-import { emptyScanResult, defaultAIConfig } from './helpers.js';
+import { emptyScanResult, defaultAIConfig } from './test-vault.js';
 
 vi.mock('@anthropic-ai/sdk', () => ({
   default: class MockAnthropic {
@@ -36,6 +36,23 @@ const makeBrokenLink = (
   candidates: [],
 });
 
+function mockOpenAIFetch() {
+  return vi.fn().mockResolvedValue({
+    ok: true,
+    json: () =>
+      Promise.resolve({
+        choices: [
+          {
+            message: {
+              content:
+                '[{"brokenTarget":"X","suggestedTarget":"Y.md","confidence":0.8,"reasoning":"match"}]',
+            },
+          },
+        ],
+      }),
+  });
+}
+
 describe('suggestFixes', () => {
   it('returns empty array when no API key is set', async () => {
     const original = process.env.ANTHROPIC_API_KEY;
@@ -55,7 +72,9 @@ describe('suggestFixes', () => {
     const result = await suggestFixes([], emptyScanResult(), defaultAIConfig());
     expect(result).toEqual([]);
   });
+});
 
+describe('suggestFixes', () => {
   it('returns suggestions when API key is set and SDK is available', async () => {
     const original = process.env.ANTHROPIC_API_KEY;
     process.env.ANTHROPIC_API_KEY = 'test-key';
@@ -95,26 +114,15 @@ describe('suggestFixes', () => {
     expect(result).toEqual([]);
     if (original !== undefined) process.env.OPENAI_API_KEY = original;
   });
+});
 
+describe('suggestFixes', () => {
   it('returns suggestions when using OpenAI provider and API key', async () => {
     const originalEnv = process.env.OPENAI_API_KEY;
     process.env.OPENAI_API_KEY = 'test-openai-key';
 
     const originalFetch = globalThis.fetch;
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () =>
-        Promise.resolve({
-          choices: [
-            {
-              message: {
-                content:
-                  '[{"brokenTarget":"X","suggestedTarget":"Y.md","confidence":0.8,"reasoning":"match"}]',
-              },
-            },
-          ],
-        }),
-    });
+    const mockFetch = mockOpenAIFetch();
     globalThis.fetch = mockFetch;
 
     try {
@@ -175,6 +183,10 @@ describe('parseSuggestions', () => {
     const result = parseSuggestions(text, brokenLinks);
     expect(result).toHaveLength(0);
   });
+});
+
+describe('parseSuggestions', () => {
+  const brokenLinks = [makeBrokenLink('Broken A'), makeBrokenLink('Broken B')];
 
   it('filters out suggestions for unknown broken target', () => {
     const text =

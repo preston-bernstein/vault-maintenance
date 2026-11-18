@@ -4,7 +4,7 @@
  */
 
 import { readFile, writeFile } from 'node:fs/promises';
-import { isMarkdownFile } from './utils/fs-helpers.js';
+import { isMarkdownFile } from './vault-fs/vault-files.js';
 import type { ReportData, ScanResult, VaultFile, WikiLink } from './types.js';
 
 /** JSON-safe shape for ScanResult (Maps as plain objects). */

@@ -1,5 +1,5 @@
 /**
- * Error and date formatting helpers shared across the pipeline.
+ * Error and date formatting shared across the pipeline.
  */
 
 export function formatError(err: unknown): string {

@@ -24,15 +24,9 @@ import {
   isLogging,
   writeLogLine,
   log,
-} from './utils/logger.js';
-import { formatError } from './utils/format.js';
-import type {
-  AISuggestion,
-  IndexReport,
-  LinkResolution,
-  ReportData,
-  ScanResult,
-} from './types.js';
+} from './logging/logger.js';
+import { formatError } from './formatting/format.js';
+import type { AISuggestion, Config, ReportData, ScanResult } from './types.js';
 
 export interface PipelineOptions {
   configPath?: string;
@@ -70,24 +64,34 @@ export interface ResolvedPhases {
 export function resolvePhases(
   opts: Pick<PipelineOptions, 'scanOnly' | 'analyze' | 'report' | 'input'>,
 ): ResolvedPhases {
-  const includeScan = Boolean(opts.scanOnly);
-  const anyPhaseFlag = Boolean(includeScan || opts.analyze || opts.report);
-  const readEnabled = includeScan || !anyPhaseFlag;
-  const analyzeEnabled = Boolean(opts.analyze) || !anyPhaseFlag;
-  const reportEnabled = Boolean(opts.report) || !anyPhaseFlag;
+  const anyPhaseFlag = Boolean(opts.scanOnly || opts.analyze || opts.report);
+  if (!anyPhaseFlag) {
+    return {
+      runRead: true,
+      runAnalyze: true,
+      runReport: true,
+      lastPhase: 'report',
+    };
+  }
 
-  const runReport = reportEnabled;
-  const runAnalyze = analyzeEnabled || (reportEnabled && !opts.input);
+  const needsPriorPhase = !opts.input;
+  const runReport = Boolean(opts.report);
+  const runAnalyze = Boolean(opts.analyze) || (runReport && needsPriorPhase);
   const runRead =
-    readEnabled || ((analyzeEnabled || reportEnabled) && !opts.input);
+    Boolean(opts.scanOnly) ||
+    (Boolean(opts.analyze || opts.report) && needsPriorPhase);
 
-  const lastPhase: PipelinePhase = runReport
-    ? 'report'
-    : runAnalyze
-      ? 'analyze'
-      : 'read';
+  return {
+    runRead,
+    runAnalyze,
+    runReport,
+    lastPhase: lastPhaseOf(runReport, runAnalyze),
+  };
+}
 
-  return { runRead, runAnalyze, runReport, lastPhase };
+function lastPhaseOf(runReport: boolean, runAnalyze: boolean): PipelinePhase {
+  if (runReport) return 'report';
+  return runAnalyze ? 'analyze' : 'read';
 }
 
 interface EmitPhaseOutputParams {
@@ -100,84 +104,82 @@ interface EmitPhaseOutputParams {
   verbose: boolean;
 }
 
+/** Writes serialized JSON to --output, or to stdout when no path is given. */
+async function emitJson(
+  json: string,
+  outputPath: string | undefined,
+  label: string,
+  verbose: boolean,
+): Promise<void> {
+  const out = json + '\n';
+  if (!outputPath) {
+    process.stdout.write(out);
+    return;
+  }
+  await writeToFile(outputPath, out);
+  await log(verbose, `${label} written to: ${outputPath}\n`);
+}
+
+/** The report phase has its own json, dry-run and write-to-vault branches. */
+async function emitReport(
+  reportData: ReportData,
+  params: EmitPhaseOutputParams,
+): Promise<void> {
+  if (params.opts.json) {
+    process.stdout.write(serializeReportData(reportData) + '\n');
+    return;
+  }
+  const report = generateReport(reportData);
+  if (params.opts.dryRun) {
+    process.stdout.write(report);
+    return;
+  }
+  const filePath = await writeReport(
+    report,
+    params.vaultPath,
+    params.reportFolder,
+    reportData.timestamp,
+  );
+  await log(params.verbose, `Report written to: ${filePath}\n`);
+  process.stdout.write(`Report: ${filePath}\n`);
+}
+
 /**
  * Serializes and emits the output of whichever phase ran last, then returns the
  * process exit code for that output. Read/analyze phases write JSON (to --output
  * or stdout); the report phase has its own json/dry-run/write-to-vault branching.
  */
 async function emitPhaseOutput(params: EmitPhaseOutputParams): Promise<number> {
-  const {
-    lastPhase,
-    scan,
-    reportData,
-    opts,
-    vaultPath,
-    reportFolder,
-    verbose,
-  } = params;
+  const { lastPhase, scan, reportData, opts, verbose } = params;
 
   if (lastPhase === 'read') {
-    if (!scan) return 0;
-    const out = serializeScanResult(scan) + '\n';
-    if (opts.output) {
-      await writeToFile(opts.output, out);
-      await log(verbose, `Scan written to: ${opts.output}\n`);
-    } else {
-      process.stdout.write(out);
+    if (scan) {
+      await emitJson(serializeScanResult(scan), opts.output, 'Scan', verbose);
     }
     return 0;
   }
+
+  if (!reportData) return 0;
 
   if (lastPhase === 'analyze') {
-    if (!reportData) return 0;
-    const out = serializeReportData(reportData) + '\n';
-    if (opts.output) {
-      await writeToFile(opts.output, out);
-      await log(verbose, `Analysis written to: ${opts.output}\n`);
-    } else {
-      process.stdout.write(out);
-    }
+    await emitJson(
+      serializeReportData(reportData),
+      opts.output,
+      'Analysis',
+      verbose,
+    );
     return 0;
   }
 
-  // lastPhase === 'report'
-  if (!reportData) return 0;
-  if (opts.json) {
-    process.stdout.write(serializeReportData(reportData) + '\n');
-  } else {
-    const report = generateReport(reportData);
-    if (opts.dryRun) {
-      process.stdout.write(report);
-    } else {
-      const filePath = await writeReport(
-        report,
-        vaultPath,
-        reportFolder,
-        reportData.timestamp,
-      );
-      await log(verbose, `Report written to: ${filePath}\n`);
-      process.stdout.write(`Report: ${filePath}\n`);
-    }
-  }
-  return hasReportIssues(
-    reportData.brokenLinks,
-    reportData.ambiguousLinks,
-    reportData.indexReports,
-  )
-    ? 1
-    : 0;
+  await emitReport(reportData, params);
+  return hasReportIssues(reportData) ? 1 : 0;
 }
 
-export async function runPipeline(opts: PipelineOptions): Promise<number> {
-  // Load config and apply CLI overrides
-  const config = await loadConfig(opts.configPath);
-
+/** Applies CLI overrides to the loaded config and returns the vault path. */
+function applyOverrides(config: Config, opts: PipelineOptions): string {
   if (opts.vault) config.vaultPath = opts.vault.trim() || config.vaultPath;
   if (opts.ai !== undefined) config.ai.enabled = opts.ai;
-  if (
-    opts.provider &&
-    (opts.provider === 'claude' || opts.provider === 'openai')
-  ) {
+  if (opts.provider === 'claude' || opts.provider === 'openai') {
     config.ai.provider = opts.provider;
   }
 
@@ -186,6 +188,94 @@ export async function runPipeline(opts: PipelineOptions): Promise<number> {
     throw new Error('Vault path is required');
   }
   config.vaultPath = vaultPath;
+  return vaultPath;
+}
+
+/** Exclude patterns plus the report folder, so a report never scans itself. */
+function withReportFolderExcluded(config: Config): string[] {
+  const reportFolderPattern = `${config.reportFolder}/**`;
+  return config.excludePatterns.includes(reportFolderPattern)
+    ? config.excludePatterns
+    : [...config.excludePatterns, reportFolderPattern];
+}
+
+/** Settings every pipeline step reads. */
+interface RunContext {
+  config: Config;
+  opts: PipelineOptions;
+  verbose: boolean;
+}
+
+/** Gets the scan result: from a fresh vault scan, from --input, or neither. */
+async function obtainScan(
+  phases: ResolvedPhases,
+  ctx: RunContext,
+): Promise<ScanResult | undefined> {
+  const { config, opts, verbose } = ctx;
+  if (phases.runRead) {
+    await log(verbose, `Vault: ${config.vaultPath}\n`);
+    await log(verbose, 'Scanning vault...\n');
+    return scanVault({
+      vaultPath: config.vaultPath,
+      excludePatterns: withReportFolderExcluded(config),
+      verbose,
+    });
+  }
+  if (phases.runAnalyze && opts.input) {
+    const scan = await readScanResultFromFile(opts.input);
+    await log(verbose, `Loaded scan from ${opts.input}\n`);
+    return scan;
+  }
+  return undefined;
+}
+
+/** Resolves links, checks indexes and, when enabled, asks the AI for fixes. */
+async function analyzeScan(
+  scan: ScanResult,
+  ctx: RunContext,
+): Promise<ReportData> {
+  const { config, verbose } = ctx;
+  await log(verbose, 'Resolving links...\n');
+  const resolutions = resolveLinks(scan);
+  const { brokenLinks, ambiguousLinks } =
+    getBrokenAndAmbiguousLinks(resolutions);
+  await log(verbose, 'Checking indexes...\n');
+  const indexReports = checkIndexes(scan, config.indexCheckDepth);
+  let aiSuggestions: AISuggestion[] = [];
+  if (config.ai.enabled && brokenLinks.length > 0) {
+    await log(verbose, 'Getting AI suggestions...\n');
+    aiSuggestions = await suggestFixes(brokenLinks, scan, config.ai, verbose);
+  }
+  return {
+    timestamp: new Date(),
+    totalFiles: scan.mdFiles.length,
+    totalLinks: scan.links.length,
+    brokenLinks,
+    ambiguousLinks,
+    indexReports,
+    aiSuggestions,
+  };
+}
+
+/** Gets the report data: from a fresh analysis, from --input, or neither. */
+async function obtainReportData(
+  phases: ResolvedPhases,
+  scan: ScanResult | undefined,
+  ctx: RunContext,
+): Promise<ReportData | undefined> {
+  const { opts, verbose } = ctx;
+  if (phases.runAnalyze && scan) return analyzeScan(scan, ctx);
+  if (phases.runReport && !phases.runAnalyze && opts.input) {
+    const reportData = await readReportDataFromFile(opts.input);
+    await log(verbose, `Loaded analysis from ${opts.input}\n`);
+    return reportData;
+  }
+  return undefined;
+}
+
+export async function runPipeline(opts: PipelineOptions): Promise<number> {
+  const config = await loadConfig(opts.configPath);
+  const vaultPath = applyOverrides(config, opts);
 
   const verbose = opts.verbose ?? false;
   const effectiveLogDir = (opts.logDir ?? config.logDir)?.trim();
@@ -193,63 +283,13 @@ export async function runPipeline(opts: PipelineOptions): Promise<number> {
 
   let exitCode = 0;
   try {
-    const { runRead, runAnalyze, runReport, lastPhase } = resolvePhases(opts);
-
-    let scan: ScanResult | undefined;
-    if (runRead) {
-      await log(verbose, `Vault: ${config.vaultPath}\n`);
-      await log(verbose, 'Scanning vault...\n');
-      const reportFolderPattern = `${config.reportFolder}/**`;
-      const excludePatterns = config.excludePatterns.includes(
-        reportFolderPattern,
-      )
-        ? config.excludePatterns
-        : [...config.excludePatterns, reportFolderPattern];
-      scan = await scanVault({
-        vaultPath,
-        excludePatterns,
-        verbose,
-      });
-    } else if (runAnalyze && opts.input) {
-      scan = await readScanResultFromFile(opts.input);
-      await log(verbose, `Loaded scan from ${opts.input}\n`);
-    }
-
-    let reportData: ReportData | undefined;
-    if (runAnalyze && scan) {
-      await log(verbose, 'Resolving links...\n');
-      const resolutions = resolveLinks(scan);
-      const { brokenLinks, ambiguousLinks } =
-        getBrokenAndAmbiguousLinks(resolutions);
-      await log(verbose, 'Checking indexes...\n');
-      const indexReports = checkIndexes(scan, config.indexCheckDepth);
-      let aiSuggestions: AISuggestion[] = [];
-      if (config.ai.enabled && brokenLinks.length > 0) {
-        await log(verbose, 'Getting AI suggestions...\n');
-        aiSuggestions = await suggestFixes(
-          brokenLinks,
-          scan,
-          config.ai,
-          verbose,
-        );
-      }
-      const timestamp = new Date();
-      reportData = {
-        timestamp,
-        totalFiles: scan.mdFiles.length,
-        totalLinks: scan.links.length,
-        brokenLinks,
-        ambiguousLinks,
-        indexReports,
-        aiSuggestions,
-      };
-    } else if (runReport && !runAnalyze && opts.input) {
-      reportData = await readReportDataFromFile(opts.input);
-      await log(verbose, `Loaded analysis from ${opts.input}\n`);
-    }
+    const phases = resolvePhases(opts);
+    const ctx: RunContext = { config, opts, verbose };
+    const scan = await obtainScan(phases, ctx);
+    const reportData = await obtainReportData(phases, scan, ctx);
 
     exitCode = await emitPhaseOutput({
-      lastPhase,
+      lastPhase: phases.lastPhase,
       scan,
       reportData,
       opts,
@@ -269,14 +309,10 @@ export async function runPipeline(opts: PipelineOptions): Promise<number> {
   }
 }
 
-function hasReportIssues(
-  brokenLinks: LinkResolution[],
-  ambiguousLinks: LinkResolution[],
-  indexReports: IndexReport[],
-): boolean {
+function hasReportIssues(reportData: ReportData): boolean {
   return (
-    brokenLinks.length > 0 ||
-    ambiguousLinks.length > 0 ||
-    indexReports.some(indexReportHasIssues)
+    reportData.brokenLinks.length > 0 ||
+    reportData.ambiguousLinks.length > 0 ||
+    reportData.indexReports.some(indexReportHasIssues)
   );
 }
