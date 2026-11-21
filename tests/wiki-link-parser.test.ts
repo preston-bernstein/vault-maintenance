@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseWikiLinks } from '../src/utils/wiki-link-parser.js';
+import { parseWikiLinks } from '../src/wiki-links/wiki-link-parser.js';
 
 describe('parseWikiLinks', () => {
   it('extracts simple wiki-links', () => {
@@ -27,7 +27,9 @@ describe('parseWikiLinks', () => {
       alias: 'display text',
     });
   });
+});
 
+describe('parseWikiLinks', () => {
   it('extracts pathed links', () => {
     const content = 'See [[Network/Devices/Router]] for config.';
     const links = parseWikiLinks(content, 'test.md');
@@ -56,7 +58,9 @@ describe('parseWikiLinks', () => {
     expect(links).toHaveLength(3);
     expect(links.map((l) => l.target)).toEqual(['Page A', 'Page B', 'Page C']);
   });
+});
 
+describe('parseWikiLinks', () => {
   it('tracks line numbers correctly', () => {
     const content = [
       'Line one',
@@ -84,7 +88,9 @@ describe('parseWikiLinks', () => {
     expect(links).toHaveLength(1);
     expect(links[0].target).toBe('Should Be Found');
   });
+});
 
+describe('parseWikiLinks', () => {
   it('handles nested code fences correctly', () => {
     const content = [
       '[[Before]]',

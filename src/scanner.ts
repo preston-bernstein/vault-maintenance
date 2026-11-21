@@ -5,16 +5,16 @@
 
 import { basename, extname } from 'node:path';
 import type { ScanResult, VaultFile, WikiLink } from './types.js';
-import { pushToMapList } from './utils/array-helpers.js';
+import { pushToMapList } from './collections/map-lists.js';
 import {
   walkDir,
   matchesExclude,
   readFileContentSafe,
   toRelativePath,
   isMarkdownFile,
-} from './utils/fs-helpers.js';
-import { writeLogLine, isLogging, log } from './utils/logger.js';
-import { parseWikiLinks } from './utils/wiki-link-parser.js';
+} from './vault-fs/vault-files.js';
+import { writeLogLine, isLogging, log } from './logging/logger.js';
+import { parseWikiLinks } from './wiki-links/wiki-link-parser.js';
 
 /** Max number of .md files read in parallel when extracting links. */
 const READ_CONCURRENCY = 32;
@@ -25,38 +25,48 @@ export interface ScanOptions {
   verbose?: boolean;
 }
 
-export async function scanVault(options: ScanOptions): Promise<ScanResult> {
-  const { vaultPath, excludePatterns, verbose } = options;
+interface FileIndexes {
+  files: VaultFile[];
+  mdFiles: VaultFile[];
+  fileIndex: Map<string, VaultFile>;
+  nameIndex: Map<string, VaultFile[]>;
+  filenameIndex: Map<string, VaultFile[]>;
+}
 
-  const allPaths = await walkDir(vaultPath);
-
-  const files: VaultFile[] = [];
-  const mdFiles: VaultFile[] = [];
-  const fileIndex = new Map<string, VaultFile>();
-  const nameIndex = new Map<string, VaultFile[]>();
-  const filenameIndex = new Map<string, VaultFile[]>();
+function indexFiles(
+  allPaths: string[],
+  vaultPath: string,
+  excludePatterns: string[],
+): FileIndexes {
+  const indexes: FileIndexes = {
+    files: [],
+    mdFiles: [],
+    fileIndex: new Map(),
+    nameIndex: new Map(),
+    filenameIndex: new Map(),
+  };
 
   for (const absolutePath of allPaths) {
     const relativePath = toRelativePath(absolutePath, vaultPath);
-
     if (matchesExclude(relativePath, excludePatterns)) continue;
 
-    const ext = extname(relativePath);
-    const name = basename(relativePath, ext);
-    const filename = basename(relativePath);
-
+    const name = basename(relativePath, extname(relativePath));
     const file: VaultFile = { relativePath, name, absolutePath };
-    files.push(file);
-    if (isMarkdownFile(relativePath)) mdFiles.push(file);
-    fileIndex.set(relativePath, file);
-    pushToMapList(nameIndex, name, file);
-    pushToMapList(filenameIndex, filename, file);
+    indexes.files.push(file);
+    if (isMarkdownFile(relativePath)) indexes.mdFiles.push(file);
+    indexes.fileIndex.set(relativePath, file);
+    pushToMapList(indexes.nameIndex, name, file);
+    pushToMapList(indexes.filenameIndex, basename(relativePath), file);
   }
 
-  if (verbose) process.stderr.write(`Scanned ${files.length} files\n`);
-  if (isLogging()) void writeLogLine(`Scanned ${files.length} files\n`);
+  return indexes;
+}
 
-  // Parse links from markdown files (parallel reads with concurrency limit)
+/** Parse links from markdown files, reading in parallel chunks. */
+async function extractLinks(
+  mdFiles: VaultFile[],
+  verbose: boolean,
+): Promise<WikiLink[]> {
   const links: WikiLink[] = [];
 
   for (let i = 0; i < mdFiles.length; i += READ_CONCURRENCY) {
@@ -67,20 +77,34 @@ export async function scanVault(options: ScanOptions): Promise<ScanResult> {
     for (const [j, content] of contents.entries()) {
       if (content === null) {
         await log(
-          verbose ?? false,
+          verbose,
           `Warning: failed to read ${chunk[j].relativePath}, skipping\n`,
         );
         continue;
       }
-      const fileLinks = parseWikiLinks(content, chunk[j].relativePath);
-      links.push(...fileLinks);
+      links.push(...parseWikiLinks(content, chunk[j].relativePath));
     }
   }
 
-  if (verbose) process.stderr.write(`Found ${links.length} links\n`);
-  if (isLogging()) void writeLogLine(`Found ${links.length} links\n`);
+  return links;
+}
 
-  return { files, links, mdFiles, fileIndex, nameIndex, filenameIndex };
+function reportProgress(message: string, verbose: boolean | undefined): void {
+  if (verbose) process.stderr.write(message);
+  if (isLogging()) void writeLogLine(message);
+}
+
+export async function scanVault(options: ScanOptions): Promise<ScanResult> {
+  const { vaultPath, excludePatterns, verbose } = options;
+
+  const allPaths = await walkDir(vaultPath);
+  const indexes = indexFiles(allPaths, vaultPath, excludePatterns);
+  reportProgress(`Scanned ${indexes.files.length} files\n`, verbose);
+
+  const links = await extractLinks(indexes.mdFiles, verbose ?? false);
+  reportProgress(`Found ${links.length} links\n`, verbose);
+
+  return { ...indexes, links };
 }
 
 /** All markdown files from a scan result. Uses precomputed mdFiles when present. */

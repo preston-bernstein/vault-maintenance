@@ -1,7 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { scanTestVault } from './helpers.js';
+import { scanTestVault } from './test-vault.js';
 import { checkIndexes, indexReportHasIssues } from '../src/index-checker.js';
 import type { IndexReport, VaultFile, WikiLink } from '../src/types.js';
+
+async function findFolderCReport(): Promise<IndexReport> {
+  const scan = await scanTestVault();
+  const reports = checkIndexes(scan, 2);
+
+  const folderCReport = reports.find(
+    (r) => r.indexFile.relativePath === 'FolderC/Index.md',
+  );
+  expect(folderCReport).toBeDefined();
+  return folderCReport!;
+}
 
 describe('checkIndexes', () => {
   it('finds Index and Overview files', async () => {
@@ -18,30 +29,20 @@ describe('checkIndexes', () => {
   });
 
   it('detects missing links in FolderC/Index.md', async () => {
-    const scan = await scanTestVault();
-    const reports = checkIndexes(scan, 2);
-
-    const folderCReport = reports.find(
-      (r) => r.indexFile.relativePath === 'FolderC/Index.md',
-    );
-    expect(folderCReport).toBeDefined();
+    const folderCReport = await findFolderCReport();
 
     // "Unlisted Page" is in FolderC but not linked from Index.md
-    const missingNames = folderCReport!.missingLinks.map((f) => f.name);
+    const missingNames = folderCReport.missingLinks.map((f) => f.name);
     expect(missingNames).toContain('Unlisted Page');
   });
+});
 
+describe('checkIndexes', () => {
   it('detects stale links in FolderC/Index.md', async () => {
-    const scan = await scanTestVault();
-    const reports = checkIndexes(scan, 2);
-
-    const folderCReport = reports.find(
-      (r) => r.indexFile.relativePath === 'FolderC/Index.md',
-    );
-    expect(folderCReport).toBeDefined();
+    const folderCReport = await findFolderCReport();
 
     // [[Gone Page]] doesn't exist anywhere
-    const staleTargets = folderCReport!.staleLinks.map((l) => l.target);
+    const staleTargets = folderCReport.staleLinks.map((l) => l.target);
     expect(staleTargets).toContain('Gone Page');
   });
 

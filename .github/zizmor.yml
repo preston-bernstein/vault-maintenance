@@ -1,0 +1,8 @@
+# Allow-list of actions a workflow may use. Add a new third-party action here, in review, never silently.
+rules:
+  forbidden-uses:
+    config:
+      allow:
+        - actions/checkout
+        - actions/setup-node
+        - preston-bernstein/ci-workflows/*

@@ -3,8 +3,8 @@
  */
 
 import type { AIConfig } from '../types.js';
-import { formatError } from '../utils/format.js';
-import { log } from '../utils/logger.js';
+import { formatError } from '../formatting/format.js';
+import { log } from '../logging/logger.js';
 
 export async function completeClaude(
   prompt: string,
@@ -37,7 +37,7 @@ async function loadAnthropicSDK() {
   } catch {
     const msg = 'AI suggestions skipped: @anthropic-ai/sdk not installed\n';
     process.stderr.write(msg);
-    const { writeLogLine, isLogging } = await import('../utils/logger.js');
+    const { writeLogLine, isLogging } = await import('../logging/logger.js');
     if (isLogging()) void writeLogLine(msg);
     return null;
   }

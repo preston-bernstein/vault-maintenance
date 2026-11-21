@@ -7,7 +7,7 @@ import {
   isMarkdownFile,
   stripMdExtension,
   walkDir,
-} from '../src/utils/fs-helpers.js';
+} from '../src/vault-fs/vault-files.js';
 import { join } from 'node:path';
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';

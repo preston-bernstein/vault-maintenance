@@ -4,7 +4,7 @@
  */
 
 import { extname } from 'node:path';
-import { lastPathSegment } from '../utils/fs-helpers.js';
+import { lastPathSegment } from '../vault-fs/vault-files.js';
 import type {
   LinkResolution,
   ScanResult,

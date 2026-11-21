@@ -1,0 +1,3 @@
+# Vendored pack gate code and vale styles live in scripts/, copied unchanged from the packs; fix them upstream.
+CORE_EXCLUDE=**/scripts/**  # scripts/ holds vendored gate code and style files
+CORE_DUP_THRESHOLD=0  # no clones outside scripts/; the repo has none today

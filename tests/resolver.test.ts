@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { scanTestVault } from './helpers.js';
+import { scanTestVault } from './test-vault.js';
 import {
   resolveLinks,
   getBrokenLinks,
@@ -37,7 +37,9 @@ describe('resolveLinks', () => {
     expect(pathed!.status).toBe('resolved');
     expect(pathed!.resolvedTo!.relativePath).toBe('FolderA/Page One.md');
   });
+});
 
+describe('resolveLinks', () => {
   it('detects broken links', async () => {
     const scan = await scanTestVault();
     const resolutions = resolveLinks(scan);

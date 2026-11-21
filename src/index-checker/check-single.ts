@@ -3,7 +3,7 @@
  */
 
 import { dirname, relative } from 'node:path';
-import { lastPathSegment } from '../utils/fs-helpers.js';
+import { lastPathSegment } from '../vault-fs/vault-files.js';
 import type { IndexReport, VaultFile, WikiLink } from '../types.js';
 
 function targetName(link: WikiLink): string {
@@ -26,13 +26,19 @@ export function isInScope(
   return slashCount < depth;
 }
 
+/** What every index in one vault is checked against. */
+export interface IndexCheckScope {
+  depth: number;
+  mdFiles: VaultFile[];
+  allVaultNames: Set<string>;
+}
+
 export function checkSingleIndex(
   indexFile: VaultFile,
-  depth: number,
-  mdFiles: VaultFile[],
-  allVaultNames: Set<string>,
   indexLinks: WikiLink[],
+  scope: IndexCheckScope,
 ): IndexReport {
+  const { depth, mdFiles, allVaultNames } = scope;
   const indexDir = dirname(indexFile.relativePath);
 
   const scopeFiles = mdFiles.filter((f) => {

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Run the same gates as CI. Turn it on once per clone: git config core.hooksPath .githooks
+# Install the tools first: bash scripts/install-gate-tools.sh, then add its PATH line to your shell.
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+bash scripts/core-validate.sh
+bash scripts/gha-validate.sh
+bash scripts/writing-validate.sh
+bash scripts/js-validate.sh
+bash scripts/ts-validate.sh

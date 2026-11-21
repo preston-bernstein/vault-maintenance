@@ -3,7 +3,7 @@ import { generateReport, writeReport } from '../src/reporter.js';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import type { ReportData } from '../src/types.js';
+import type { LinkResolution, ReportData } from '../src/types.js';
 
 function makeReportData(overrides: Partial<ReportData> = {}): ReportData {
   return {
@@ -18,6 +18,20 @@ function makeReportData(overrides: Partial<ReportData> = {}): ReportData {
   };
 }
 
+const OLD_DEVICE_BROKEN: LinkResolution = {
+  link: {
+    raw: '[[Old Device]]',
+    target: 'Old Device',
+    alias: null,
+    isEmbed: false,
+    line: 15,
+    sourceFile: 'Network/Change Log.md',
+  },
+  status: 'broken',
+  resolvedTo: null,
+  candidates: [],
+};
+
 describe('generateReport', () => {
   it('generates a report with correct header', () => {
     const report = generateReport(makeReportData());
@@ -30,21 +44,7 @@ describe('generateReport', () => {
   it('shows broken links table when present', () => {
     const report = generateReport(
       makeReportData({
-        brokenLinks: [
-          {
-            link: {
-              raw: '[[Old Device]]',
-              target: 'Old Device',
-              alias: null,
-              isEmbed: false,
-              line: 15,
-              sourceFile: 'Network/Change Log.md',
-            },
-            status: 'broken',
-            resolvedTo: null,
-            candidates: [],
-          },
-        ],
+        brokenLinks: [OLD_DEVICE_BROKEN],
       }),
     );
 
@@ -58,35 +58,16 @@ describe('generateReport', () => {
 
     expect(report).toContain('None found.');
   });
+});
 
+describe('generateReport', () => {
   it('includes AI suggestions when present', () => {
     const report = generateReport(
       makeReportData({
-        brokenLinks: [
-          {
-            link: {
-              raw: '[[Old Device]]',
-              target: 'Old Device',
-              alias: null,
-              isEmbed: false,
-              line: 15,
-              sourceFile: 'Network/Change Log.md',
-            },
-            status: 'broken',
-            resolvedTo: null,
-            candidates: [],
-          },
-        ],
+        brokenLinks: [OLD_DEVICE_BROKEN],
         aiSuggestions: [
           {
-            brokenLink: {
-              raw: '[[Old Device]]',
-              target: 'Old Device',
-              alias: null,
-              isEmbed: false,
-              line: 15,
-              sourceFile: 'Network/Change Log.md',
-            },
+            brokenLink: OLD_DEVICE_BROKEN.link,
             suggestedTarget: 'Network/Devices/AT&T Router',
             confidence: 0.85,
             reasoning: 'Similar device name',
@@ -107,7 +88,9 @@ describe('generateReport', () => {
     expect(report).toContain('| Total files | 154 |');
     expect(report).toContain('| Total links | 347 |');
   });
+});
 
+describe('generateReport', () => {
   it('includes stale index section with missing and stale links', () => {
     const report = generateReport(
       makeReportData({
@@ -147,7 +130,9 @@ describe('generateReport', () => {
     expect(report).toContain('Stale links:');
     expect(report).toContain('`[[Gone]]` (linked but file does not exist)');
   });
+});
 
+describe('generateReport', () => {
   it('shows "All indexes are up to date" when no stale indexes', () => {
     const report = generateReport(makeReportData({ indexReports: [] }));
     expect(report).toContain('## 📘 Stale indexes (0)');

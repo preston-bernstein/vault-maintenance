@@ -6,7 +6,11 @@
 import { join } from 'node:path';
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { indexReportHasIssues } from './index-checker.js';
-import { formatError, isValidDate, toISODateString } from './utils/format.js';
+import {
+  formatError,
+  isValidDate,
+  toISODateString,
+} from './formatting/format.js';
 import {
   pushHeaderSection,
   pushBrokenLinksSection,
@@ -24,7 +28,12 @@ export function generateReport(data: ReportData): string {
   const dateStr = toISODateString(data.timestamp);
   const reportsWithIssues = data.indexReports.filter(indexReportHasIssues);
 
-  pushHeaderSection(lines, dateStr, ts, data.totalFiles, data.totalLinks);
+  pushHeaderSection(lines, {
+    dateStr,
+    ts,
+    totalFiles: data.totalFiles,
+    totalLinks: data.totalLinks,
+  });
   lines.push('---');
   pushBrokenLinksSection(lines, data.brokenLinks);
   pushAISuggestionsSection(lines, data.aiSuggestions);
