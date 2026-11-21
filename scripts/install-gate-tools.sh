@@ -19,7 +19,10 @@ mkdir -p "$DIR/bin" "$DIR/dl"
 fetch_binary() { # name url sha256 archive-member
   local name="$1" url="$2" sha="$3" member="$4" file="$DIR/dl/$1.tar.gz"
   curl -fsSL "$url" -o "$file"
-  echo "$sha  $file" | sha256sum -c - >/dev/null || { echo "install-gate-tools: checksum mismatch for $name" >&2; exit 1; }
+  echo "$sha  $file" | sha256sum -c - >/dev/null || {
+    echo "install-gate-tools: checksum mismatch for $name" >&2
+    exit 1
+  }
   tar -xzf "$file" -C "$DIR/bin" "$member"
 }
 
