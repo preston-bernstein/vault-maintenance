@@ -14,3 +14,21 @@ trim_trailing_whitespace = false
 
 [*.{json,yml,yaml}]
 indent_size = 2
+
+[*.{sh,bash}]
+indent_style = space
+indent_size = 2
+shell_variant = bash
+binary_next_line = true
+switch_case_indent = true
+end_of_line = lf
+insert_final_newline = true
+
+[*.bats]
+indent_style = space
+indent_size = 2
+shell_variant = bats
+binary_next_line = true
+switch_case_indent = true
+end_of_line = lf
+insert_final_newline = true
