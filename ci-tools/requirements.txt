@@ -1,5 +1,5 @@
 # Gate tools for CI, pinned with hashes for linux x86_64. Install: bash scripts/install-gate-tools.sh
-lizard==1.25.0 --hash=sha256:e82fc8ad93a4c9025f7dad9428bdcfaa8caedfb4358a8ea5860de35a3794626f
+lizard==1.26.1 --hash=sha256:344e2bfb1b41d31207223ba844fac1f84da80053edf901b3df4ee051b152d0f5 --hash=sha256:9a4d7372faa12dbe725cfb6dcadf9bed4916f9176a154b285917713012ac35c3
 pathspec==1.1.1 --hash=sha256:a00ce642f577bf7f473932318056212bc4f8bfdf53128c78bbd5af0b9b20b189
 pygments==2.21.0 --hash=sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9
 zizmor==1.32.0 --hash=sha256:84a6acb975accc13408786a2bd274b572537ca19c933ebbc13e78f3988562071
